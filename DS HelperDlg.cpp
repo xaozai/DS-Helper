@@ -118,8 +118,7 @@ LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam,
 		}
 		case WM_GETTEXT:
 		{
-			return 0;
-			break;
+			return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
 		}
 		default: return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
 	}
