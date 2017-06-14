@@ -118,7 +118,12 @@ LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam,
 		}
 		case WM_GETTEXT:
 		{
-			return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
+			if (((CDSHelperApp*)AfxGetApp())->m_ProtectPasswControl)
+				return 0;
+			else
+				return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
+
+			break;
 		}
 		default: return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
 	}
@@ -129,6 +134,8 @@ LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam,
 BOOL CDSHelperDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	theApp.m_ProtectPasswControl = true;
 
 	DefEditProc = (WNDPROC)SetWindowLongPtr(::GetDlgItem(this->GetSafeHwnd(), IDC_EDIT_PASSWORD), GWLP_WNDPROC, (LONG_PTR)CDSHelperDlg::NewEditProc);//for a passw protection
 
@@ -526,7 +533,9 @@ void CDSHelperDlg::OnEnKillfocusEditPassword()
 	CString val;
 	LONG hRes(0);
 
+	theApp.m_ProtectPasswControl = false;
 	m_CEditPassword.GetWindowText(val);
+	theApp.m_ProtectPasswControl = true;
 
 	if (val.IsEmpty())
 		return;
@@ -694,9 +703,8 @@ void CDSHelperDlg::OnCbnCloseupComboProtocol()
 		return;
 
 	CString val;
-
 	m_ComboProtocol.GetWindowText(val);
-
+	
 	if (val.IsEmpty())
 		return;
 
@@ -714,10 +722,12 @@ void CDSHelperDlg::OnBnClickedButtonAddTask()
 	
 	// --- Auth
 	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
-	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
 	m_CEditAddress.GetWindowText(m_App->m_AppAddress);
 	m_CEditPort.GetWindowText(m_App->m_AppPort);
-
+	theApp.m_ProtectPasswControl = false;
+	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
+	theApp.m_ProtectPasswControl = true;
+	
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
 		return;
 

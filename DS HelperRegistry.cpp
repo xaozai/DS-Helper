@@ -27,6 +27,7 @@
 */
 #include "stdafx.h"//precompiled headers
 #include "DS HelperRegistry.h"
+#include "DS Helper.h"
 
 DSHelperRegistry::DSHelperRegistry()
 {

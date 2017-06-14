@@ -112,15 +112,16 @@ void CDSSynoFSDlg::ShowSynoFSTree()
 	// --- Auth
 	CDSHelperApp* DSHelperApp = (CDSHelperApp *)AfxGetApp();
 
+	
 	m_pParent->m_pParentDlg->m_CEditAddress.GetWindowText(DSHelperApp->m_AppAddress);
 	m_pParent->m_pParentDlg->m_CEditPort.GetWindowText(DSHelperApp->m_AppPort);
 	m_pParent->m_pParentDlg->m_CEditUsername.GetWindowText(DSHelperApp->m_AppUsername);
+	DSHelperApp->m_ProtectPasswControl = false;
 	m_pParent->m_pParentDlg->m_CEditPassword.GetWindowText(DSHelperApp->m_AppPassword);
+	DSHelperApp->m_ProtectPasswControl = true;
 
-	
 	if (!(DSHelperApp->AuthOnSyno(&(CString(L"FileStation")))))
 		return;
-
 
 	// --- Get Folders
 	CString URL;
