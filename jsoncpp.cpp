@@ -68,6 +68,7 @@ license you like.
 // End of content of file: LICENSE
 // //////////////////////////////////////////////////////////////////////
 
+#include "stdafx.h"//precompiled headers
 #include "jsoncpp/json.h"
 
 #ifndef JSON_IS_AMALGAMATION

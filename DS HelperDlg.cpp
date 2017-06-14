@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 */
-#include "stdafx.h"
+#include "stdafx.h"//precompiled headers
 #include "DS Helper.h"
 #include "DS HelperDlg.h"
 #include "EditPathesDlg.h"
@@ -67,6 +67,8 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 	ON_NOTIFY(NM_CLICK, IDC_SYSLINK_HOMEPAGE, &CAboutDlg::OnNMClickSyslinkHomepage)
 END_MESSAGE_MAP()
 
+WNDPROC CDSHelperDlg::DefEditProc;//static member
+
 CDSHelperDlg::CDSHelperDlg(CWnd* pParent /*=NULL*/) : CDialogEx(CDSHelperDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -105,9 +107,31 @@ BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
 	ON_CBN_CLOSEUP(IDC_COMBO_PROTOCOL, &CDSHelperDlg::OnCbnCloseupComboProtocol)
 END_MESSAGE_MAP()
 
+LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case EM_SETPASSWORDCHAR:
+		{
+			return 0;
+			break;
+		}
+		case WM_GETTEXT:
+		{
+			return 0;
+			break;
+		}
+		default: return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
+	}
+
+	return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
+}
+
 BOOL CDSHelperDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	DefEditProc = (WNDPROC)SetWindowLongPtr(::GetDlgItem(this->GetSafeHwnd(), IDC_EDIT_PASSWORD), GWLP_WNDPROC, (LONG_PTR)CDSHelperDlg::NewEditProc);//for a passw protection
 
 	//Create the ToolTip control
 	if (!m_ToolTip.Create(this))

@@ -25,7 +25,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 */
-#include "stdafx.h"
+#include "stdafx.h"//precompiled headers
 #include "Crypto.h"
 
 //	Tell the linker to link the to the Cryptography API.

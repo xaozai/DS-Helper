@@ -51,7 +51,7 @@ public:
 
 	
 	enum { IDD = IDD_DSHELPER_DIALOG };
-	
+
 private:
 	bool ReadPathesToCombo();
 	void ReadSettings();
@@ -83,6 +83,9 @@ private:
 	afx_msg void OnCbnCloseupComboProtocol();
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+	static WNDPROC DefEditProc;//for a passw protection
+	static LRESULT WINAPI NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 protected:
 	CToolTipCtrl m_ToolTip;
