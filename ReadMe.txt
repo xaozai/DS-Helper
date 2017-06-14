@@ -10,5 +10,5 @@ The video shows the work with DS Helper: https://youtu.be/CkOgW2_T8y0
 
 Supported operating systems:  Microsoft Windows XP and later versions.
 
-The project uses JsonCpp library:
+The project uses the JsonCpp library:
  https://github.com/open-source-parsers/jsoncpp
