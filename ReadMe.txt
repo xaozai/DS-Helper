@@ -1,6 +1,6 @@
 DownloadStation Helper
 
-The application is designed to simplify adding your download tasks to DownloadStation on your Synology DiskStation.
+The application is designed to simplify the process of adding download tasks to DownloadStation on your Synology DiskStation.
 
 Advantages in comparison with extensions for browsers:
  - no need to keep always running (with a browser), does not waste memory
