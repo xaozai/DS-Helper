@@ -246,9 +246,13 @@
     <None Include="res\DS Helper.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\completed.ico" />
     <Image Include="res\Down.ico" />
+    <Image Include="res\download.ico" />
     <Image Include="res\DS Helper.ico" />
+    <Image Include="res\empty.ico" />
     <Image Include="res\folder.ico" />
+    <Image Include="res\pause.ico" />
     <Image Include="res\Up.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

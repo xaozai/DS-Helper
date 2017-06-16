@@ -107,6 +107,18 @@
     <Image Include="res\Down.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\download.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\empty.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\completed.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\pause.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\DS Helper.rc2">

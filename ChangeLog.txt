@@ -1,2 +1,5 @@
+1.1
+	Added a list of active download tasks.
+
 1.0.0.1 
 	The first release.

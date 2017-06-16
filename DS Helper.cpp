@@ -84,7 +84,7 @@ BOOL CDSHelperApp::InitInstance()
 	return FALSE;
 }
 
-bool CDSHelperApp::AuthOnSyno(CString* SessionName)
+bool CDSHelperApp::AuthOnSyno(CString* SessionName, CString* strRet)
 {
 	CString URL;
 	HTTPResponse Response;
@@ -106,7 +106,14 @@ bool CDSHelperApp::AuthOnSyno(CString* SessionName)
 
 	if (Response.code != 200)
 	{
-		theApp.GetMainWnd()->MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		if (!Response.strResponse.IsEmpty())
+		{
+			if (strRet)
+				strRet->SetString(Response.strResponse);
+			else
+				theApp.GetMainWnd()->MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		}
+		
 		return false;
 	}
 
@@ -114,13 +121,21 @@ bool CDSHelperApp::AuthOnSyno(CString* SessionName)
 	if (!parsingSuccessful)
 	{
 		Response.strResponse.Format(L"Failed to parse the string:\n%s", m_pJSONreader->getFormattedErrorMessages());
-		theApp.GetMainWnd()->MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		
+		if (strRet)
+			strRet->SetString(Response.strResponse);
+		else
+			theApp.GetMainWnd()->MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+
 		return false;
 	}
 
 	if ((root.get("success", "false").asString()) == "false")
 	{
-		theApp.GetMainWnd()->MessageBox(L"The server returned \"success\": false", L"DS Helper - Error", MB_ICONEXCLAMATION);
+		if (strRet)
+			strRet->SetString(L"The server returned \"success\": false");
+		else
+			theApp.GetMainWnd()->MessageBox(L"The server returned \"success\": false", L"DS Helper - Authentication error", MB_ICONEXCLAMATION);
 		return false;
 	}
 	else

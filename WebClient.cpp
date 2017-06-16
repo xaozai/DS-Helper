@@ -179,8 +179,26 @@ CString WebClient::Urlencode(CString* sIn)
 	RetVal.Replace(L"=", L"%3D");
 	return RetVal;
 
-	
 }
+
+CString WebClient::getInetError(DWORD err)
+{
+	HANDLE h = ::GetModuleHandle(_T("WinINet.dll"));
+	if (h != NULL)
+	{ 
+		LPTSTR p;
+		if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE, (LPCVOID)h, err, 0, (LPTSTR)&p, 0, NULL) != 0)
+		{ 
+			CString s(p);
+			s.Replace(_T("\r\n"), _T(""));
+			return s;
+		} 
+	} 
+
+	CString s;
+	s.Format(_T("%d"), err);
+	return s;
+} 
 
 HTTPResponse WebClient::ReadResponse(CHttpFile* HTTPfile, bool convert)
 {
@@ -220,11 +238,13 @@ HTTPResponse WebClient::ReadResponse(CHttpFile* HTTPfile, bool convert)
 
 HTTPResponse WebClient::GetURL(Protocol Prot, CString* URL, bool Convert)
 {
+	HTTPResponse RetVal; 
+	
 	DWORD flags(0);
 	if(Prot == HTTPS)
-		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_SECURE;
+		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE;
 	else
-		flags = INTERNET_FLAG_TRANSFER_ASCII;
+		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE;
 
 	CHttpFile* HTTPfile = NULL;
 
@@ -241,23 +261,39 @@ Again:
 		{
 			if (!SecondTry)
 			{
-				DWORD dwSecurityFlags;
-				HTTPfile->QueryOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
-				dwSecurityFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
-				HTTPfile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
+				if (HTTPfile)
+				{
+					DWORD dwSecurityFlags;
+					HTTPfile->QueryOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
+					dwSecurityFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+					HTTPfile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
+				}
 				SecondTry = true;
 				goto Again;
 			}
 			else
-				throw e;
+			{
+				RetVal.strResponse = getInetError(e->m_dwError);
+				RetVal.code = e->m_dwError;
+				e->Delete(); 
+				return RetVal;
+			}
 		}
 		else
-			throw e;
+		{
+			RetVal.strResponse = getInetError(e->m_dwError);
+			RetVal.code = e->m_dwError;
+			e->Delete(); 
+			return RetVal;
+		}
 
 		e->Delete();
 	}
 	
-	HTTPResponse RetVal = ReadResponse(HTTPfile, Convert);
+	if (!HTTPfile)
+		return RetVal;
+
+	RetVal = ReadResponse(HTTPfile, Convert);
 
 	HTTPfile->Close(); delete HTTPfile; HTTPfile = NULL;
 
@@ -266,6 +302,8 @@ Again:
 
 HTTPResponse WebClient::GetURL(Protocol Prot, CString* Address, CString* Port, CString* Target, CString* URL)
 {
+	HTTPResponse RetVal; 
+	
 	DWORD flags(0);
 	if (Prot == HTTPS)
 		flags = INTERNET_FLAG_SECURE;
@@ -296,15 +334,30 @@ Again:
 				goto Again;
 			}
 			else
-				throw e;
+			{
+				RetVal.strResponse = getInetError(e->m_dwError);
+				RetVal.code = e->m_dwError;
+				e->Delete();
+				return RetVal;
+			}
 		}
 		else
-			throw e;
+		{
+			RetVal.strResponse = getInetError(e->m_dwError);
+			RetVal.code = e->m_dwError;
+			e->Delete();
+			return RetVal;
+		}
 		
 		e->Delete();
 	}
 
-	HTTPResponse RetVal = ReadResponse(HTTPfile);
+	
+
+	if (!HTTPfile)
+		return RetVal;
+
+	RetVal = ReadResponse(HTTPfile);
 	
 	HTTPfile->Close(); delete HTTPfile; HTTPfile = NULL;
 
@@ -410,21 +463,38 @@ Again:
 		{
 			if (!SecondTry)
 			{
-				DWORD dwSecurityFlags;
-				HTTPfile->QueryOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
-				dwSecurityFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
-				HTTPfile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
-				SecondTry = true;
+				if (HTTPfile)
+				{
+					DWORD dwSecurityFlags;
+					HTTPfile->QueryOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
+					dwSecurityFlags |= SECURITY_FLAG_IGNORE_UNKNOWN_CA | SECURITY_FLAG_IGNORE_REVOCATION | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+					HTTPfile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
+					SecondTry = true;
+				}
+				
 				goto Again;
 			}
 			else
-				throw e;
+			{
+				RetVal.strResponse = getInetError(e->m_dwError);
+				RetVal.code = e->m_dwError;
+				e->Delete();
+				return RetVal;
+			}
 		}
 		else
-			throw e;
+		{
+			RetVal.strResponse = getInetError(e->m_dwError);
+			RetVal.code = e->m_dwError;
+			e->Delete();
+			return RetVal;
+		}
 
 		e->Delete();
 	}
+
+	if (!HTTPfile)
+		return RetVal;
 
 	RetVal = ReadResponse(HTTPfile);
 

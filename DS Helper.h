@@ -48,7 +48,7 @@ public:
 public:
 	virtual BOOL InitInstance();
 
-	bool AuthOnSyno(CString* SessionName);
+	bool AuthOnSyno(CString* SessionName, CString* strRet = NULL);
 	std::string CString2Std(CString&);
 
 	bool m_ProtectPasswControl;

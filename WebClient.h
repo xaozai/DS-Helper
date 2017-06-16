@@ -59,6 +59,7 @@ private:
 	std::map<DWORD, TCHAR*>::iterator m_it;
 	
 	CString GetCodeDescription(DWORD);
+	CString getInetError(DWORD err);
 	void InitCodesDescr();
 	void MakeBoundary(CString*);
 	HTTPResponse ReadResponse(CHttpFile*, bool Convert = false);

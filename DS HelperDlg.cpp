@@ -88,6 +88,8 @@ void CDSHelperDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON_OPEN_FILE, m_ButtonOpenFile);
 	DDX_Control(pDX, IDC_COMBO_PROTOCOL, m_ComboProtocol);
 	DDX_Control(pDX, IDC_EDIT_PORT, m_CEditPort);
+	DDX_Control(pDX, IDC_LIST_ACTIVE_TASKS, m_CListActiveTasks);
+	DDX_Control(pDX, IDC_CHECK_SHOW_ACTIVE_TASKS, m_CheckBoxShowActiveTasks);
 }
 
 BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
@@ -105,6 +107,9 @@ BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
 	ON_EN_KILLFOCUS(IDC_EDIT_PORT, &CDSHelperDlg::OnEnKillfocusEditPort)
 	ON_CBN_KILLFOCUS(IDC_COMBO_PROTOCOL, &CDSHelperDlg::OnCbnKillfocusComboProtocol)
 	ON_CBN_CLOSEUP(IDC_COMBO_PROTOCOL, &CDSHelperDlg::OnCbnCloseupComboProtocol)
+	ON_BN_CLICKED(IDC_CHECK_SHOW_ACTIVE_TASKS, &CDSHelperDlg::OnBnClickedCheckShowActiveTasks)
+	ON_WM_DESTROY()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -131,6 +136,19 @@ LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam,
 	return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
 }
 
+void CDSHelperDlg::HideCList()
+{
+	m_CListActiveTasks.ShowWindow(SW_HIDE);
+	SetWindowPos(NULL, WinRect.left, WinRect.top, WinRect.Width(), CListRect.top + 12, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+}
+
+void CDSHelperDlg::ShowCList()
+{
+	m_CListActiveTasks.ShowWindow(SW_SHOWNORMAL);
+	SetWindowPos(NULL, WinRect.left, WinRect.top, WinRect.Width(), WinRect.Height(), SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+
+}
+
 BOOL CDSHelperDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -139,6 +157,11 @@ BOOL CDSHelperDlg::OnInitDialog()
 
 	DefEditProc = (WNDPROC)SetWindowLongPtr(::GetDlgItem(this->GetSafeHwnd(), IDC_EDIT_PASSWORD), GWLP_WNDPROC, (LONG_PTR)CDSHelperDlg::NewEditProc);//for a passw protection
 
+	this->GetWindowRect(WinRect);
+	m_CListActiveTasks.GetWindowRect(CListRect);
+
+	HideCList();
+	
 	//Create the ToolTip control
 	if (!m_ToolTip.Create(this))
 	{
@@ -147,7 +170,7 @@ BOOL CDSHelperDlg::OnInitDialog()
 	else
 	{
 		m_ToolTip.AddTool(&m_ButtonEditPathes, _T("Edit predefined pathes"));
-		m_ToolTip.AddTool(&m_ButtonAddATask, _T("Add a task"));
+		m_ToolTip.AddTool(&m_ButtonAddATask, _T("Add the task"));
 		m_ToolTip.AddTool(&m_StorePassword, _T("Store the password"));
 		m_ToolTip.AddTool(&m_ButtonOpenFile, _T("Open a file"));
 
@@ -187,6 +210,16 @@ BOOL CDSHelperDlg::OnInitDialog()
 	m_ComboProtocol.AddString(L"HTTP");
 	m_ComboProtocol.AddString(L"HTTPS");
 
+	m_CListImages.Create(16, 16, ILC_COLOR8 | ILC_COLOR16 | ILC_MASK, 2, 6);
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_EMPTY)); 
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_DOWNLOAD));
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_PAUSE));
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_COMPLETED));
+	m_CListActiveTasks.SetImageList(&m_CListImages, LVSIL_SMALL);
+
+	m_CListActiveTasks.InsertColumn(0, _T("Name"), LVCFMT_LEFT, CListRect.Width() * 5 / 6);
+	m_CListActiveTasks.InsertColumn(1, _T("%"), LVCFMT_LEFT, CListRect.Width() / 6);
+		
 	ReadSettings();//read the app settings
 	
 	byte nLast = m_ComboPath.GetCount() - 1;
@@ -718,6 +751,15 @@ void CDSHelperDlg::OnCbnCloseupComboProtocol()
 
 void CDSHelperDlg::OnBnClickedButtonAddTask()
 {
+	
+	CString Task;
+	m_CEditTask.GetWindowText(Task);
+	if (Task.IsEmpty())
+	{
+		MessageBox(L"The task is empty!", L"DS Helper - Error", MB_ICONEXCLAMATION);
+		return;
+	}
+
 	Json::Value root;//will contains the root value after parsing.
 	
 	// --- Auth
@@ -732,8 +774,8 @@ void CDSHelperDlg::OnBnClickedButtonAddTask()
 		return;
 
 	// --- create task
-	CString Task, Destination;
-	m_CEditTask.GetWindowText(Task);
+	CString Destination;
+	
 	m_ComboPath.GetWindowText(Destination);
 	
 	if (Destination.Left(1) == L"/")
@@ -822,10 +864,282 @@ void CAboutDlg::OnNMClickSyslinkLicense(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-
 void CAboutDlg::OnNMClickSyslinkHomepage(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	ShellExecute(AfxGetApp()->GetMainWnd()->GetSafeHwnd(), _T("open"), _T("https://github.com/xaozai/DS-Helper/"), _T(""), _T(""), SW_SHOWNORMAL);
 
 	*pResult = 0;
 }
+
+void CDSHelperDlg::OnBnClickedCheckShowActiveTasks()
+{
+	if (m_CheckBoxShowActiveTasks.GetCheck())
+	{
+		m_CheckBoxShowActiveTasks.EnableWindow(false);
+		if (RefreshTaskThreadRunning || RefreshThread)
+		{
+			::WaitForSingleObject(RefreshThread->m_hThread, INFINITE);//wait for thread ends
+			delete RefreshThread; RefreshThread = NULL;
+		}
+		if (!m_ThreadSynoConnect)
+		{
+			m_ThreadSynoConnect = new WebClient;
+		}
+		m_CListActiveTasks.EnableWindow(true);
+		RefreshThread = AfxBeginThread(RefreshActiveTasksLoop, (LPVOID)this, 0, CREATE_SUSPENDED);
+		RefreshThread->m_bAutoDelete = false;
+		RefreshThread->ResumeThread();
+		m_CheckBoxShowActiveTasks.EnableWindow(true);
+		ShowCList();
+	}
+	else
+	{
+		m_CheckBoxShowActiveTasks.EnableWindow(false);
+		RefreshTaskThreadRunning = false;
+
+		::WaitForSingleObject(RefreshThread->m_hThread, INFINITE);//wait for thread ends
+		delete RefreshThread; RefreshThread = NULL;
+		if (m_ThreadSynoConnect)
+		{
+			delete m_ThreadSynoConnect; m_ThreadSynoConnect = NULL;
+		}
+		m_CListActiveTasks.DeleteAllItems();
+		m_CListActiveTasks.EnableWindow(false);
+		m_CheckBoxShowActiveTasks.EnableWindow(true);
+		HideCList();
+	}
+}
+
+UINT __cdecl CDSHelperDlg::RefreshActiveTasksLoop(LPVOID pParam)
+{
+	
+	CDSHelperDlg* Dlg = (CDSHelperDlg*)pParam;
+
+	Dlg->RefreshTaskThreadRunning = true;
+	
+	bool NeedAuth = true;
+
+	while (Dlg->RefreshTaskThreadRunning)
+	{
+		if(Dlg->RefreshActiveTasks(NeedAuth) != -1)
+			NeedAuth = false;
+		
+		if (!Dlg->RefreshTaskThreadRunning)
+			break;
+		
+		UINT i = 0;
+		while (i < 50 && Dlg->RefreshTaskThreadRunning)//~5 sec
+		{
+			
+			if (!Dlg->RefreshTaskThreadRunning)
+				break;
+
+			Sleep(100); i++;
+		}
+				
+	}
+
+	return 0;
+}
+
+void CDSHelperDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	RefreshTaskThreadRunning = false;
+
+	if (RefreshThread)
+	{
+		::WaitForSingleObject(RefreshThread->m_hThread, INFINITE);//wait for thread ends
+		
+		delete RefreshThread; RefreshThread = NULL;
+	}
+	
+	if (m_ThreadSynoConnect)
+	{
+		delete m_ThreadSynoConnect; m_ThreadSynoConnect = NULL;
+	}
+}
+
+void CDSHelperDlg::OnClose()
+{
+	
+CDialogEx::OnClose();
+}
+
+int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
+{
+
+	if (!m_CListActiveTasks.GetItemCount())
+		m_CListActiveTasks.InsertItem(0, L"The query is executed...", 0);
+	
+	Json::Value root;//will contains the root value after parsing.
+
+	if (NeedAuth)
+	{
+		// --- Auth
+		m_CEditUsername.GetWindowText(m_App->m_AppUsername);
+		m_CEditAddress.GetWindowText(m_App->m_AppAddress);
+		m_CEditPort.GetWindowText(m_App->m_AppPort);
+		theApp.m_ProtectPasswControl = false;
+		m_CEditPassword.GetWindowText(m_App->m_AppPassword);
+		theApp.m_ProtectPasswControl = true;
+
+		CString strAuthRet;
+
+		if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")), &strAuthRet)))
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+				m_CListActiveTasks.InsertItem(0, strAuthRet);
+			}
+			return -1;
+		}
+	}
+	
+	CString URL;
+	HTTPResponse Response;
+
+	URL = (m_App->m_AppEnumProto == HTTPS ? L"https://" : L"http://") + m_App->m_AppAddress + L":" + m_App->m_AppPort + L"/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=transfer&sid=" + m_App->m_AppSID;
+	Response = m_ThreadSynoConnect->GetURL(m_App->m_AppEnumProto, &URL, true);
+
+	if (Response.code != 200)
+	{
+		if (!Response.strResponse.IsEmpty())
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+				m_CListActiveTasks.InsertItem(0, Response.strResponse);
+			}
+		}
+		return 0;
+	}
+
+	bool parsingSuccessful = m_App->m_pJSONreader->parse(m_App->CString2Std(Response.strResponse), root);
+	if (!parsingSuccessful)
+	{
+		if (RefreshTaskThreadRunning)
+		{
+			m_CListActiveTasks.DeleteAllItems();
+			m_CListActiveTasks.InsertItem(0, Response.strResponse);
+		}
+		return 0;
+	}
+
+	if (root.get("success", false).asBool() == false)
+	{
+		root = root.get("error", NULL);
+		if (root != NULL)
+		{
+			DWORD code = root.get("code", 0).asUInt();
+			Response.strResponse.Format(L"The server has returned the code: %u (%s)", code, m_App->m_pAppSynoConnect->GetSynoDSCodeDescription(code));
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+				m_CListActiveTasks.InsertItem(0, Response.strResponse);
+			}
+			
+		}
+	}
+	else
+	{
+		UINT LastInserted = 0;
+		double SizeDownloaded = 0;
+		double FullSize = 0;
+
+		bool ThereIsDownloading = false;
+
+		if (!root.isMember("data"))
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+			}
+			return 0;
+		}
+		else
+			root = root.get("data", NULL);
+
+		if (!root.isMember("tasks"))
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+			}
+			return 0;
+		}
+		else
+			root = root.get("tasks", NULL);
+				
+		//m_CListActiveTasks.FindItem(); +setcursel
+				
+		if (RefreshTaskThreadRunning)
+		{
+			m_CListActiveTasks.DeleteAllItems();
+		}
+		for (Json::ArrayIndex index = 0; index < root.size(); index++)
+		{
+
+			if (!(strcmp(root[index]["status"].asCString(), "downloading")))
+			{
+						
+				ThereIsDownloading = true;
+
+				if (root[index].isMember("title"))
+				{
+					if (RefreshTaskThreadRunning)
+					{
+						m_CListActiveTasks.InsertItem(LastInserted, CString(root[index]["title"].asCString()), 1);
+					}
+				}
+						
+				if (root[index].isMember("size"))
+				{
+					FullSize = (double)(root[index].get("size", 0).asDouble());
+				}
+						
+				if (FullSize)
+				{
+					SizeDownloaded = 0;
+
+					if (root[index].isMember("additional"))
+					{
+						if (root[index]["additional"].isMember("transfer"))
+						{
+							SizeDownloaded = (double)(root[index]["additional"]["transfer"]["size_downloaded"].asDouble());
+							//TRACE("%s - %f\n", root[index]["title"].asCString(), SizeDownloaded);
+						}
+					}
+
+					CString percent;
+					percent.Format(L"%.2f", (100.0 * (SizeDownloaded / FullSize)));
+					if (RefreshTaskThreadRunning)
+					{
+						m_CListActiveTasks.SetItemText(LastInserted, 1, percent);
+					}
+
+				}
+						
+				LastInserted++;
+			}
+
+		}
+		if (!ThereIsDownloading)
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				m_CListActiveTasks.DeleteAllItems();
+			}
+		}
+	
+	}
+
+	return 0;
+}
+
+
+
+
+

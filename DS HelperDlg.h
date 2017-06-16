@@ -32,6 +32,7 @@
 #include "afxwin.h"
 #include "DS HelperTypes.h"
 #include "DS HelperRegistry.h"
+#include "afxcmn.h"
 
 
 class CDSHelperDlg : public CDialogEx
@@ -81,11 +82,17 @@ private:
 	afx_msg void OnEnKillfocusEditPort();
 	afx_msg void OnCbnKillfocusComboProtocol();
 	afx_msg void OnCbnCloseupComboProtocol();
-
+	
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 	static WNDPROC DefEditProc;//for a passw protection
 	static LRESULT WINAPI NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+	
+	static UINT __cdecl RefreshActiveTasksLoop(LPVOID pParam);
+	int RefreshActiveTasks(bool NeedAuth);
+	bool RefreshTaskThreadRunning = false;
+	CWinThread* RefreshThread = NULL;
+	WebClient* m_ThreadSynoConnect = NULL;
 
 protected:
 	CToolTipCtrl m_ToolTip;
@@ -99,6 +106,21 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 	
+public:
+	CListCtrl m_CListActiveTasks;
+	afx_msg void OnBnClickedCheckShowActiveTasks();
+private:
+	CButton m_CheckBoxShowActiveTasks;
+	CImageList m_CListImages;
+
+	void HideCList();
+	void ShowCList();
+	CRect CListRect;
+	CRect WinRect;
+
+public:
+	afx_msg void OnDestroy();
+	afx_msg void OnClose();
 };
 
 #endif
