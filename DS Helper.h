@@ -51,8 +51,6 @@ public:
 	bool AuthOnSyno(CString* SessionName, CString* strRet = NULL);
 	std::string CString2Std(CString&);
 
-	bool m_ProtectPasswControl;
-	
 	CString m_AppAddress;
 	CString m_AppPort;
 	CString m_AppUsername;

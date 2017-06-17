@@ -116,9 +116,9 @@ void CDSSynoFSDlg::ShowSynoFSTree()
 	m_pParent->m_pParentDlg->m_CEditAddress.GetWindowText(DSHelperApp->m_AppAddress);
 	m_pParent->m_pParentDlg->m_CEditPort.GetWindowText(DSHelperApp->m_AppPort);
 	m_pParent->m_pParentDlg->m_CEditUsername.GetWindowText(DSHelperApp->m_AppUsername);
-	DSHelperApp->m_ProtectPasswControl = false;
+	m_pParent->m_pParentDlg->m_CEditPassword.Enable_WM_GetText();
 	m_pParent->m_pParentDlg->m_CEditPassword.GetWindowText(DSHelperApp->m_AppPassword);
-	DSHelperApp->m_ProtectPasswControl = true;
+	m_pParent->m_pParentDlg->m_CEditPassword.Disable_WM_GetText();
 
 	if (!(DSHelperApp->AuthOnSyno(&(CString(L"FileStation")))))
 		return;

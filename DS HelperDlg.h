@@ -33,6 +33,7 @@
 #include "DS HelperTypes.h"
 #include "DS HelperRegistry.h"
 #include "afxcmn.h"
+#include "CSafeCEdit.h"
 
 
 class CDSHelperDlg : public CDialogEx
@@ -40,17 +41,17 @@ class CDSHelperDlg : public CDialogEx
 
 public:
 	CDSHelperDlg(CWnd* pParent = NULL);
-	CComboBox m_ComboPath;
 	
+	CComboBox m_ComboPath;
+	CComboBox m_ComboProtocol;
+
 	CEdit m_CEditAddress;
 	CEdit m_CEditPort;
 	CEdit m_CEditUsername;
-	CEdit m_CEditPassword;
-	CComboBox m_ComboProtocol;
-
-	CDSHelperApp* m_App;
-
+	CSafeCEdit m_CEditPassword;
 	
+	CDSHelperApp* m_App;
+		
 	enum { IDD = IDD_DSHELPER_DIALOG };
 
 private:
@@ -66,6 +67,8 @@ private:
 	CButton m_StorePassword;
 	CButton m_ButtonOpenFile;
 	CEdit m_CEditTask;
+
+	CListCtrl m_CListActiveTasks;
 	
 	HICON m_hIcon;
 
@@ -82,11 +85,14 @@ private:
 	afx_msg void OnEnKillfocusEditPort();
 	afx_msg void OnCbnKillfocusComboProtocol();
 	afx_msg void OnCbnCloseupComboProtocol();
+	afx_msg void OnBnClickedCheckShowActiveTasks();
+	afx_msg void OnDestroy();
+	afx_msg void OnClose();
 	
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
-	static WNDPROC DefEditProc;//for a passw protection
-	static LRESULT WINAPI NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+	//static WNDPROC DefEditProc;//for a passw protection
+	//static LRESULT WINAPI NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	
 	static UINT __cdecl RefreshActiveTasksLoop(LPVOID pParam);
 	int RefreshActiveTasks(bool NeedAuth);
@@ -99,16 +105,13 @@ protected:
 
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	
-
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+
 	DECLARE_MESSAGE_MAP()
 	
-public:
-	CListCtrl m_CListActiveTasks;
-	afx_msg void OnBnClickedCheckShowActiveTasks();
 private:
 	CButton m_CheckBoxShowActiveTasks;
 	CImageList m_CListImages;
@@ -117,10 +120,7 @@ private:
 	void ShowCList();
 	CRect CListRect;
 	CRect WinRect;
-
-public:
-	afx_msg void OnDestroy();
-	afx_msg void OnClose();
+	
 };
 
 #endif

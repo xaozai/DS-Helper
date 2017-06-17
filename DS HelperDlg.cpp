@@ -67,7 +67,7 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 	ON_NOTIFY(NM_CLICK, IDC_SYSLINK_HOMEPAGE, &CAboutDlg::OnNMClickSyslinkHomepage)
 END_MESSAGE_MAP()
 
-WNDPROC CDSHelperDlg::DefEditProc;//static member
+//WNDPROC CDSHelperDlg::DefEditProc;//static member
 
 CDSHelperDlg::CDSHelperDlg(CWnd* pParent /*=NULL*/) : CDialogEx(CDSHelperDlg::IDD, pParent)
 {
@@ -112,30 +112,6 @@ BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
 	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
-LRESULT WINAPI CDSHelperDlg::NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-		case EM_SETPASSWORDCHAR:
-		{
-			return 0;
-			break;
-		}
-		case WM_GETTEXT:
-		{
-			if (((CDSHelperApp*)AfxGetApp())->m_ProtectPasswControl)
-				return 0;
-			else
-				return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
-
-			break;
-		}
-		default: return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
-	}
-
-	return CallWindowProc((WNDPROC)DefEditProc, hwnd, message, wParam, lParam);
-}
-
 void CDSHelperDlg::HideCList()
 {
 	m_CListActiveTasks.ShowWindow(SW_HIDE);
@@ -152,10 +128,6 @@ void CDSHelperDlg::ShowCList()
 BOOL CDSHelperDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
-
-	theApp.m_ProtectPasswControl = true;
-
-	DefEditProc = (WNDPROC)SetWindowLongPtr(::GetDlgItem(this->GetSafeHwnd(), IDC_EDIT_PASSWORD), GWLP_WNDPROC, (LONG_PTR)CDSHelperDlg::NewEditProc);//for a passw protection
 
 	this->GetWindowRect(WinRect);
 	m_CListActiveTasks.GetWindowRect(CListRect);
@@ -566,9 +538,9 @@ void CDSHelperDlg::OnEnKillfocusEditPassword()
 	CString val;
 	LONG hRes(0);
 
-	theApp.m_ProtectPasswControl = false;
+	m_CEditPassword.Enable_WM_GetText();
 	m_CEditPassword.GetWindowText(val);
-	theApp.m_ProtectPasswControl = true;
+	m_CEditPassword.Disable_WM_GetText();
 
 	if (val.IsEmpty())
 		return;
@@ -766,10 +738,10 @@ void CDSHelperDlg::OnBnClickedButtonAddTask()
 	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
 	m_CEditAddress.GetWindowText(m_App->m_AppAddress);
 	m_CEditPort.GetWindowText(m_App->m_AppPort);
-	theApp.m_ProtectPasswControl = false;
+	m_CEditPassword.Enable_WM_GetText();
 	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
-	theApp.m_ProtectPasswControl = true;
-	
+	m_CEditPassword.Disable_WM_GetText();
+
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
 		return;
 
@@ -981,9 +953,9 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 		m_CEditUsername.GetWindowText(m_App->m_AppUsername);
 		m_CEditAddress.GetWindowText(m_App->m_AppAddress);
 		m_CEditPort.GetWindowText(m_App->m_AppPort);
-		theApp.m_ProtectPasswControl = false;
+		m_CEditPassword.Enable_WM_GetText();
 		m_CEditPassword.GetWindowText(m_App->m_AppPassword);
-		theApp.m_ProtectPasswControl = true;
+		m_CEditPassword.Disable_WM_GetText();
 
 		CString strAuthRet;
 
