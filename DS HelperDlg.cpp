@@ -1430,14 +1430,7 @@ void CDSHelperDlg::DeleteTask()
 		if (root.isMember("data"))
 		{
 			int RetCode = root["data"][0].get("error", -1).asInt();
-			if (RetCode == 0)
-			{
-				item.mask = LVIF_IMAGE;
-				item.iImage = 1;
-				item.iSubItem = 1;
-				m_CListActiveTasks.SetItem(&item);
-			}
-			else
+			if (RetCode != 0)
 			{
 				Response.strResponse.Format(L"The server has returned the code: %u", RetCode);
 				MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
