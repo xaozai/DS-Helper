@@ -84,6 +84,25 @@ BOOL CDSHelperApp::InitInstance()
 	return FALSE;
 }
 
+void CDSHelperApp::SynoLogout(TCHAR* SessionName)
+{
+	CString URL;
+	
+	if (m_AppEnumProto == HTTPS)
+	{
+		URL = L"/webapi/auth.cgi?api=SYNO.API.Auth&version=1&method=logout&session=";
+		URL = URL + SessionName;
+		m_pAppSynoConnect->GetURL(m_AppEnumProto, &m_AppAddress, &m_AppPort, &URL, NULL);
+	}
+	else
+	{
+		URL = L"http://" + m_AppAddress + L":" + m_AppPort + L"/webapi/auth.cgi?api=SYNO.API.Auth&version=1&method=logout&session=" + SessionName;
+		m_pAppSynoConnect->GetURL(m_AppEnumProto, &URL);
+	}
+
+}
+
+
 bool CDSHelperApp::AuthOnSyno(CString* SessionName, CString* strRet)
 {
 	CString URL;

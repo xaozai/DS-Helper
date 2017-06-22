@@ -1,3 +1,6 @@
+1.2
+	Improved the tasklist. Added the ability to manage tasks via the context menu of the tasklist.
+
 1.1
 	Added a list of active download tasks.
 

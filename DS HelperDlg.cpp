@@ -67,8 +67,6 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 	ON_NOTIFY(NM_CLICK, IDC_SYSLINK_HOMEPAGE, &CAboutDlg::OnNMClickSyslinkHomepage)
 END_MESSAGE_MAP()
 
-//WNDPROC CDSHelperDlg::DefEditProc;//static member
-
 CDSHelperDlg::CDSHelperDlg(CWnd* pParent /*=NULL*/) : CDialogEx(CDSHelperDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -108,8 +106,10 @@ BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
 	ON_CBN_KILLFOCUS(IDC_COMBO_PROTOCOL, &CDSHelperDlg::OnCbnKillfocusComboProtocol)
 	ON_CBN_CLOSEUP(IDC_COMBO_PROTOCOL, &CDSHelperDlg::OnCbnCloseupComboProtocol)
 	ON_BN_CLICKED(IDC_CHECK_SHOW_ACTIVE_TASKS, &CDSHelperDlg::OnBnClickedCheckShowActiveTasks)
+	//ON_MESSAGE(WM_COMMAND, OnMenuClick)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
+	//ON_NOTIFY(NM_RCLICK, IDC_LIST_ACTIVE_TASKS, &CDSHelperDlg::OnNMRClickListActiveTasks)
 END_MESSAGE_MAP()
 
 void CDSHelperDlg::HideCList()
@@ -187,10 +187,16 @@ BOOL CDSHelperDlg::OnInitDialog()
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_DOWNLOAD));
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_PAUSE));
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_COMPLETED));
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_FILE));
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_TIME));
 	m_CListActiveTasks.SetImageList(&m_CListImages, LVSIL_SMALL);
 
-	m_CListActiveTasks.InsertColumn(0, _T("Name"), LVCFMT_LEFT, CListRect.Width() * 5 / 6);
-	m_CListActiveTasks.InsertColumn(1, _T("%"), LVCFMT_LEFT, CListRect.Width() / 6);
+	m_CListActiveTasks.InsertColumn(0, _T("id"), LVCFMT_LEFT, 0, 0); 
+	m_CListActiveTasks.InsertColumn(1, _T("Name"), LVCFMT_LEFT, CListRect.Width() * 5 / 6, 1);
+	m_CListActiveTasks.InsertColumn(2, _T("%"), LVCFMT_LEFT, CListRect.Width() / 6, 2);
+
+	m_CListActiveTasks.SetExtendedStyle(m_CListActiveTasks.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_SUBITEMIMAGES);
+	
 		
 	ReadSettings();//read the app settings
 	
@@ -688,6 +694,29 @@ BOOL CDSHelperDlg::PreTranslateMessage(MSG* pMsg)
 {
 	m_ToolTip.RelayEvent(pMsg);
 
+	//CList Menu
+	if (pMsg->message == WM_COMMAND)
+	{
+		switch (LOWORD(pMsg->wParam))
+		{
+			case ID_MENU_PAUSE:
+			{
+								  PauseTask();
+								  break;
+			}
+			case ID_MENU_RESUME:
+			{
+								   ResumeTask();
+								   break;
+			}
+			case ID_MENU_DELETE:
+			{
+								   DeleteTask();
+								   break;
+			}
+		};
+	}
+
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
@@ -935,16 +964,37 @@ void CDSHelperDlg::OnDestroy()
 
 void CDSHelperDlg::OnClose()
 {
-	
-CDialogEx::OnClose();
+	//theApp.SynoLogout(L"DownloadStation");
+	//theApp.SynoLogout(L"FileStation");
+	CDialogEx::OnClose();
 }
 
 int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 {
 
+	CString StatusQuery(L"The query is executed...");
+
+	LVITEM item;
+	item.state = 0;
+	item.stateMask = 0;
+	item.iImage = 0;
+	item.lParam = 0;
+
 	if (!m_CListActiveTasks.GetItemCount())
-		m_CListActiveTasks.InsertItem(0, L"The query is executed...", 0);
-	
+	{
+		item.mask = LVIF_TEXT;
+		item.iItem = 0;
+		item.iSubItem = 0;
+		item.pszText = (LPWSTR)StatusQuery.GetString();
+
+		m_CListActiveTasks.InsertItem(&item);
+
+		item.iSubItem = 1;
+
+		m_CListActiveTasks.SetItem(&item);
+	}
+		
+
 	Json::Value root;//will contains the root value after parsing.
 
 	if (NeedAuth)
@@ -964,7 +1014,18 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 			if (RefreshTaskThreadRunning)
 			{
 				m_CListActiveTasks.DeleteAllItems();
-				m_CListActiveTasks.InsertItem(0, strAuthRet);
+				
+				item.mask = LVIF_TEXT;
+				item.iItem = 0;
+				item.iSubItem = 0;
+				item.pszText = (LPWSTR)strAuthRet.GetString();
+
+				m_CListActiveTasks.InsertItem(&item);
+
+				item.iSubItem = 1;
+
+				m_CListActiveTasks.SetItem(&item);
+
 			}
 			return -1;
 		}
@@ -983,7 +1044,17 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 			if (RefreshTaskThreadRunning)
 			{
 				m_CListActiveTasks.DeleteAllItems();
-				m_CListActiveTasks.InsertItem(0, Response.strResponse);
+				
+				item.mask = LVIF_TEXT;
+				item.iItem = 0;
+				item.iSubItem = 0;
+				item.pszText = (LPWSTR)Response.strResponse.GetString();
+
+				m_CListActiveTasks.InsertItem(&item);
+
+				item.iSubItem = 1;
+
+				m_CListActiveTasks.SetItem(&item);
 			}
 		}
 		return 0;
@@ -995,7 +1066,17 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 		if (RefreshTaskThreadRunning)
 		{
 			m_CListActiveTasks.DeleteAllItems();
-			m_CListActiveTasks.InsertItem(0, Response.strResponse);
+			
+			item.mask = LVIF_TEXT;
+			item.iItem = 0;
+			item.iSubItem = 0;
+			item.pszText = (LPWSTR)Response.strResponse.GetString();
+
+			m_CListActiveTasks.InsertItem(&item);
+
+			item.iSubItem = 1;
+
+			m_CListActiveTasks.SetItem(&item);
 		}
 		return 0;
 	}
@@ -1010,7 +1091,17 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 			if (RefreshTaskThreadRunning)
 			{
 				m_CListActiveTasks.DeleteAllItems();
-				m_CListActiveTasks.InsertItem(0, Response.strResponse);
+				
+				item.mask = LVIF_TEXT;
+				item.iItem = 0;
+				item.iSubItem = 0;
+				item.pszText = (LPWSTR)Response.strResponse.GetString();
+
+				m_CListActiveTasks.InsertItem(&item);
+
+				item.iSubItem = 1;
+
+				m_CListActiveTasks.SetItem(&item);
 			}
 			
 		}
@@ -1021,7 +1112,7 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 		double SizeDownloaded = 0;
 		double FullSize = 0;
 
-		bool ThereIsDownloading = false;
+		bool ThereIsInserted = false;
 
 		if (!root.isMember("data"))
 		{
@@ -1045,73 +1136,474 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 		else
 			root = root.get("tasks", NULL);
 				
-		//m_CListActiveTasks.FindItem(); +setcursel
-				
-		if (RefreshTaskThreadRunning)
-		{
-			m_CListActiveTasks.DeleteAllItems();
-		}
+		CArray<CString, CString> NeedInListArray;
+		CString title;
+		CString id;
+
 		for (Json::ArrayIndex index = 0; index < root.size(); index++)
 		{
 
-			if (!(strcmp(root[index]["status"].asCString(), "downloading")))
-			{
-						
-				ThereIsDownloading = true;
+			bool NeedInList = false;
+			byte ImageIndex(0);
+			
+			CString strStatus(root[index]["status"].asCString());
+			
+			LVFINDINFO info;
 
-				if (root[index].isMember("title"))
+			int ListItemIndex(-1);
+			
+			if (strStatus == L"downloading" || strStatus == L"finishing")
+			{
+				NeedInList = true;
+				ImageIndex = 1;
+			}
+			else
+			{
+				if (strStatus == L"paused")
 				{
-					if (RefreshTaskThreadRunning)
+					NeedInList = true;
+					ImageIndex = 2;
+				}
+				else
+				{
+					if (strStatus == L"finished")
 					{
-						m_CListActiveTasks.InsertItem(LastInserted, CString(root[index]["title"].asCString()), 1);
+						NeedInList = true;
+						ImageIndex = 3;
+					}
+					else
+					{
+						if (strStatus == L"hash_checking")
+						{
+							NeedInList = true;
+							ImageIndex = 4;
+						}
+						else
+						if (strStatus == L"waiting")
+						{
+							NeedInList = true;
+							ImageIndex = 5;
+						}
 					}
 				}
+			}
+
+			if (NeedInList)
+			{
+				if (RefreshTaskThreadRunning)
+				{
+					info.flags = LVFI_STRING;
+					info.psz = StatusQuery.GetString();
+					ListItemIndex = m_CListActiveTasks.FindItem(&info);
+					if (ListItemIndex != -1)
+						m_CListActiveTasks.DeleteItem(ListItemIndex);
+					ListItemIndex = -1;
+				}
+
+				ThereIsInserted = true;
+
+				if (root[index].isMember("id"))
+				{
+					id = root[index]["id"].asCString();
+
+					NeedInListArray.Add(id);
+
+					if (RefreshTaskThreadRunning)
+					{
 						
+						info.flags = LVFI_STRING;
+						info.psz = id.GetString();
+						ListItemIndex = m_CListActiveTasks.FindItem(&info);
+
+
+						if (ListItemIndex == -1)
+						{
+							item.mask =  LVIF_TEXT;
+							item.iItem = LastInserted;
+							item.iSubItem = 0;
+							item.pszText = (LPWSTR)info.psz;
+
+							m_CListActiveTasks.InsertItem(&item);
+
+							if (root[index].isMember("title"))
+							{
+								title = root[index]["title"].asCString();
+								
+								item.iItem = LastInserted;
+								item.mask = LVIF_IMAGE | LVIF_TEXT;
+								item.pszText = (LPWSTR)title.GetString();
+								item.iSubItem = 1;
+								item.iImage = ImageIndex;
+								m_CListActiveTasks.SetItem(&item);
+							}
+
+							ListItemIndex = LastInserted;
+
+							LastInserted++;
+						}
+						else
+						{
+							item.iItem = ListItemIndex;
+							item.mask = LVIF_IMAGE;
+							item.iSubItem = 1;
+							item.iImage = ImageIndex;
+							m_CListActiveTasks.SetItem(&item);
+						}
+						
+					}
+				}//root[index].isMember("id")
+				
 				if (root[index].isMember("size"))
 				{
 					FullSize = (double)(root[index].get("size", 0).asDouble());
 				}
-						
-				if (FullSize)
+				
+				CString percent;
+				
+				if (ImageIndex == 4)
 				{
-					SizeDownloaded = 0;
-
-					if (root[index].isMember("additional"))
-					{
-						if (root[index]["additional"].isMember("transfer"))
-						{
-							SizeDownloaded = (double)(root[index]["additional"]["transfer"]["size_downloaded"].asDouble());
-							//TRACE("%s - %f\n", root[index]["title"].asCString(), SizeDownloaded);
-						}
-					}
-
-					CString percent;
-					percent.Format(L"%.2f", (100.0 * (SizeDownloaded / FullSize)));
-					if (RefreshTaskThreadRunning)
-					{
-						m_CListActiveTasks.SetItemText(LastInserted, 1, percent);
-					}
-
+					percent.SetString(L"Checking...");
 				}
+				else
+				{
+					if (FullSize)
+					{
+						SizeDownloaded = 0;
+
+						if (root[index].isMember("additional"))
+						{
+							if (root[index]["additional"].isMember("transfer"))
+							{
+								SizeDownloaded = (double)(root[index]["additional"]["transfer"]["size_downloaded"].asDouble());
+
+								if (SizeDownloaded == FullSize)
+								{
+									item.iItem = ListItemIndex;
+									item.mask = LVIF_IMAGE;
+									item.iSubItem = 1;
+									item.iImage = 3;
+									m_CListActiveTasks.SetItem(&item);
+								}
+							}
+						}
+
+						percent.Format(L"%.2f", (100.0 * (SizeDownloaded / FullSize)));
 						
-				LastInserted++;
+					}
+				}
+
+				if (RefreshTaskThreadRunning)
+				{
+					m_CListActiveTasks.SetItemText(ListItemIndex, 2, percent);
+				}
+
+			}
+			else//no need in list
+			{
+				if (RefreshTaskThreadRunning)
+				{
+					if (root[index].isMember("id"))
+					{
+						id = root[index]["id"].asCString();
+						info.flags = LVFI_STRING;
+						info.psz = id.GetString();
+						ListItemIndex = m_CListActiveTasks.FindItem(&info);
+
+						if (ListItemIndex != -1)
+							m_CListActiveTasks.DeleteItem(ListItemIndex);
+					}
+				}
 			}
 
-		}
-		if (!ThereIsDownloading)
+		}//for
+		
+		if (!ThereIsInserted)
 		{
 			if (RefreshTaskThreadRunning)
 			{
 				m_CListActiveTasks.DeleteAllItems();
 			}
 		}
+		else
+		{
+			if (RefreshTaskThreadRunning)
+			{
+				for (int _i = 0; _i < m_CListActiveTasks.GetItemCount(); _i++)
+				{
+
+					bool InArray = false;
+					if (RefreshTaskThreadRunning)
+					{
+						id = m_CListActiveTasks.GetItemText(_i, 0);
+
+
+						for (int _j = 0; _j < NeedInListArray.GetCount(); _j++)
+						{
+							if (NeedInListArray.GetAt(_j) == id)
+							{
+								InArray = true;
+								break;
+							}
+
+						}
+					}
+
+					if (!InArray)
+					{
+						if (RefreshTaskThreadRunning)
+						{
+							m_CListActiveTasks.DeleteItem(_i);
+						}
+					}
+
+				}
+			}
+		}
 	
-	}
+	}//root.get("success", false).asBool()
 
 	return 0;
 }
 
+void CDSHelperDlg::DeleteTask()
+{
+	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
+	if (SelectedIndex == -1)
+		return;
 
+	// --- Auth
+	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
+	m_CEditAddress.GetWindowText(m_App->m_AppAddress);
+	m_CEditPort.GetWindowText(m_App->m_AppPort);
+	m_CEditPassword.Enable_WM_GetText();
+	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
+	m_CEditPassword.Disable_WM_GetText();
 
+	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+		return;
 
+	Json::Value root;//will contains the root value after parsing.
 
+	CString URL;
+	HTTPResponse Response;
+
+	LVITEM item;
+	item.state = 0;
+	item.stateMask = 0;
+	item.iImage = 0;
+	item.lParam = 0;
+
+	CString id = m_CListActiveTasks.GetItemText(SelectedIndex, 0);
+
+	URL = (m_App->m_AppEnumProto == HTTPS ? L"https://" : L"http://") + m_App->m_AppAddress + L":" + m_App->m_AppPort + L"/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=delete&id=" + id + "&sid=" + m_App->m_AppSID;
+	Response = m_ThreadSynoConnect->GetURL(m_App->m_AppEnumProto, &URL, true);
+
+	if (Response.code != 200)
+	{
+		if (!Response.strResponse.IsEmpty())
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+
+		return;
+	}
+
+	bool parsingSuccessful = m_App->m_pJSONreader->parse(m_App->CString2Std(Response.strResponse), root);
+	if (!parsingSuccessful)
+	{
+		Response.strResponse.Format(L"Failed to parse the string:\n%s", m_App->m_pJSONreader->getFormattedErrorMessages());
+		MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		return;
+	}
+
+	if (root.get("success", false).asBool() == false)
+	{
+		root = root.get("error", NULL);
+		if (root != NULL)
+		{
+			DWORD code = root.get("code", 0).asUInt();
+			Response.strResponse.Format(L"The server has returned the code: %u (%s)", code, m_App->m_pAppSynoConnect->GetSynoDSCodeDescription(code));
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		}
+	}
+	else
+	{
+
+		if (root.isMember("data"))
+		{
+			int RetCode = root["data"][0].get("error", -1).asInt();
+			if (RetCode == 0)
+			{
+				item.mask = LVIF_IMAGE;
+				item.iImage = 1;
+				item.iSubItem = 1;
+				m_CListActiveTasks.SetItem(&item);
+			}
+			else
+			{
+				Response.strResponse.Format(L"The server has returned the code: %u", RetCode);
+				MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+			}
+		}
+	}
+}
+
+void CDSHelperDlg::PauseTask()
+{
+	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
+	if (SelectedIndex == -1)
+		return;
+
+	// --- Auth
+	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
+	m_CEditAddress.GetWindowText(m_App->m_AppAddress);
+	m_CEditPort.GetWindowText(m_App->m_AppPort);
+	m_CEditPassword.Enable_WM_GetText();
+	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
+	m_CEditPassword.Disable_WM_GetText();
+
+	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+		return;
+
+	Json::Value root;//will contains the root value after parsing.
+
+	CString URL;
+	HTTPResponse Response;
+
+	LVITEM item;
+	item.state = 0;
+	item.stateMask = 0;
+	item.iImage = 0;
+	item.lParam = 0;
+
+	CString id = m_CListActiveTasks.GetItemText(SelectedIndex, 0);
+
+	URL = (m_App->m_AppEnumProto == HTTPS ? L"https://" : L"http://") + m_App->m_AppAddress + L":" + m_App->m_AppPort + L"/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=pause&id=" + id + "&sid=" + m_App->m_AppSID;
+	Response = m_ThreadSynoConnect->GetURL(m_App->m_AppEnumProto, &URL, true);
+
+	if (Response.code != 200)
+	{
+		if (!Response.strResponse.IsEmpty())
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+
+		return;
+	}
+
+	bool parsingSuccessful = m_App->m_pJSONreader->parse(m_App->CString2Std(Response.strResponse), root);
+	if (!parsingSuccessful)
+	{
+		Response.strResponse.Format(L"Failed to parse the string:\n%s", m_App->m_pJSONreader->getFormattedErrorMessages());
+		MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		return;
+	}
+
+	if (root.get("success", false).asBool() == false)
+	{
+		root = root.get("error", NULL);
+		if (root != NULL)
+		{
+			DWORD code = root.get("code", 0).asUInt();
+			Response.strResponse.Format(L"The server has returned the code: %u (%s)", code, m_App->m_pAppSynoConnect->GetSynoDSCodeDescription(code));
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		}
+	}
+	else
+	{
+
+		if (root.isMember("data"))
+		{
+			int RetCode = root["data"][0].get("error", -1).asInt();
+			if (RetCode == 0)
+			{
+				item.mask = LVIF_IMAGE;
+				item.iImage = 2;
+				item.iSubItem = 1;
+				m_CListActiveTasks.SetItem(&item);
+			}
+			else
+			{
+				Response.strResponse.Format(L"The server has returned the code: %u", RetCode);
+				MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+			}
+		}
+	}
+}
+
+void CDSHelperDlg::ResumeTask()
+{
+	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
+	if (SelectedIndex == -1)
+		return;
+	
+	// --- Auth
+	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
+	m_CEditAddress.GetWindowText(m_App->m_AppAddress);
+	m_CEditPort.GetWindowText(m_App->m_AppPort);
+	m_CEditPassword.Enable_WM_GetText();
+	m_CEditPassword.GetWindowText(m_App->m_AppPassword);
+	m_CEditPassword.Disable_WM_GetText();
+
+	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+		return;
+	
+	Json::Value root;//will contains the root value after parsing.
+
+	CString URL;
+	HTTPResponse Response;
+
+	LVITEM item;
+	item.state = 0;
+	item.stateMask = 0;
+	item.iImage = 0;
+	item.lParam = 0;
+
+	CString id = m_CListActiveTasks.GetItemText(SelectedIndex, 0);
+
+	URL = (m_App->m_AppEnumProto == HTTPS ? L"https://" : L"http://") + m_App->m_AppAddress + L":" + m_App->m_AppPort + L"/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=resume&id=" + id + "&sid=" + m_App->m_AppSID;
+	Response = m_ThreadSynoConnect->GetURL(m_App->m_AppEnumProto, &URL, true);
+
+	if (Response.code != 200)
+	{
+		if (!Response.strResponse.IsEmpty())
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		
+		return;
+	}
+
+	bool parsingSuccessful = m_App->m_pJSONreader->parse(m_App->CString2Std(Response.strResponse), root);
+	if (!parsingSuccessful)
+	{
+		Response.strResponse.Format(L"Failed to parse the string:\n%s", m_App->m_pJSONreader->getFormattedErrorMessages());
+		MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		return;
+	}
+
+	if (root.get("success", false).asBool() == false)
+	{
+		root = root.get("error", NULL);
+		if (root != NULL)
+		{
+			DWORD code = root.get("code", 0).asUInt();
+			Response.strResponse.Format(L"The server has returned the code: %u (%s)", code, m_App->m_pAppSynoConnect->GetSynoDSCodeDescription(code));
+			MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+		}
+	}
+	else
+	{
+
+		if (root.isMember("data"))
+		{
+			int RetCode = root["data"][0].get("error", -1).asInt();
+			if (RetCode == 0)
+			{
+				item.mask = LVIF_IMAGE;
+				item.iImage = 1;
+				item.iSubItem = 1;
+				m_CListActiveTasks.SetItem(&item);
+			}
+			else
+			{
+				Response.strResponse.Format(L"The server has returned the code: %u", RetCode);
+				MessageBox(Response.strResponse, L"DS Helper - Error", MB_ICONEXCLAMATION);
+			}
+		}
+	}
+}

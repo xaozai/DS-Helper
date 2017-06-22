@@ -49,6 +49,9 @@ public:
 	virtual BOOL InitInstance();
 
 	bool AuthOnSyno(CString* SessionName, CString* strRet = NULL);
+	void SynoLogout(TCHAR* SessionName);
+
+
 	std::string CString2Std(CString&);
 
 	CString m_AppAddress;

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "DownloadStation Helper"
-#define MyAppVersion "1.1"
+#define MyAppVersion "1.2"
 #define MyAppPublisher "xaozai"
 #define MyAppURL "https://github.com/xaozai/DS-Helper"
 #define MyAppExeName "DS Helper.exe"

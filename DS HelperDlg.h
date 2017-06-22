@@ -34,6 +34,7 @@
 #include "DS HelperRegistry.h"
 #include "afxcmn.h"
 #include "CSafeCEdit.h"
+#include "DS H_CListCtrl.h"
 
 
 class CDSHelperDlg : public CDialogEx
@@ -50,6 +51,8 @@ public:
 	CEdit m_CEditUsername;
 	CSafeCEdit m_CEditPassword;
 	
+	bool RefreshTaskThreadRunning = false;
+
 	CDSHelperApp* m_App;
 		
 	enum { IDD = IDD_DSHELPER_DIALOG };
@@ -68,8 +71,8 @@ private:
 	CButton m_ButtonOpenFile;
 	CEdit m_CEditTask;
 
-	CListCtrl m_CListActiveTasks;
-	
+	CDSHListCtrl m_CListActiveTasks;//CListCtrl
+
 	HICON m_hIcon;
 
 	DSHelperRegistry m_Registry;
@@ -88,17 +91,19 @@ private:
 	afx_msg void OnBnClickedCheckShowActiveTasks();
 	afx_msg void OnDestroy();
 	afx_msg void OnClose();
+	//afx_msg LRESULT OnMenuClick(WPARAM, LPARAM);
 	
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
-
-	//static WNDPROC DefEditProc;//for a passw protection
-	//static LRESULT WINAPI NewEditProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 	
 	static UINT __cdecl RefreshActiveTasksLoop(LPVOID pParam);
 	int RefreshActiveTasks(bool NeedAuth);
-	bool RefreshTaskThreadRunning = false;
 	CWinThread* RefreshThread = NULL;
 	WebClient* m_ThreadSynoConnect = NULL;
+	
+	void DeleteTask();
+	void PauseTask();
+	void ResumeTask();
+	
 
 protected:
 	CToolTipCtrl m_ToolTip;
@@ -121,6 +126,8 @@ private:
 	CRect CListRect;
 	CRect WinRect;
 	
+//public:
+	//afx_msg void OnNMRClickListActiveTasks(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 #endif
