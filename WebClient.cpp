@@ -428,7 +428,7 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	BODYpre += "create\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
 	BODYpre += "Content-Disposition: form-data; name=\"destination\"\r\n\r\n";
-	BODYpre += CStringA(Destination->GetString()) + "\r\n";
+	BODYpre += CStringA(CT2A(Destination->GetString(), CP_UTF8)) + "\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
 	BODYpre += "Content-Disposition: form-data; name=\"file\"; filename=\"" + CStringA(file.GetFileName()) + "\"\r\n";
 	BODYpre += "Content-Type: application/octet-stream\r\n\r\n";
