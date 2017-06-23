@@ -107,6 +107,8 @@ BOOL CDSSynoFSDlg::OnInitDialog()
 
 void CDSSynoFSDlg::ShowSynoFSTree()
 {
+	theApp.DoWaitCursor(1);
+
 	Json::Value root;//will contains the root value after parsing.
 	
 	// --- Auth
@@ -121,7 +123,10 @@ void CDSSynoFSDlg::ShowSynoFSTree()
 	m_pParent->m_pParentDlg->m_CEditPassword.Disable_WM_GetText();
 
 	if (!(DSHelperApp->AuthOnSyno(&(CString(L"FileStation")))))
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	// --- Get Folders
 	CString URL;
@@ -182,6 +187,7 @@ void CDSSynoFSDlg::ShowSynoFSTree()
 		}
 	}
 
+	theApp.DoWaitCursor(-1);
 }
 
 void CDSSynoFSDlg::OnTvnItemexpandingTreeSyno(NMHDR *pNMHDR, LRESULT *pResult)
@@ -199,6 +205,8 @@ void CDSSynoFSDlg::OnTvnItemexpandingTreeSyno(NMHDR *pNMHDR, LRESULT *pResult)
 		*pResult = 0; return;
 	}
 
+	theApp.DoWaitCursor(1);
+
 	if (m_Tree.ItemHasChildren(hTreeItem))
 	{
 		HTREEITEM hTreeItemC = m_Tree.GetChildItem(hTreeItem);
@@ -206,7 +214,7 @@ void CDSSynoFSDlg::OnTvnItemexpandingTreeSyno(NMHDR *pNMHDR, LRESULT *pResult)
 			m_Tree.DeleteItem(hTreeItemC);
 		else
 		{
-			*pResult = 0; return;
+			*pResult = 0; theApp.DoWaitCursor(-1); return;
 		}
 			
 
@@ -273,12 +281,14 @@ void CDSSynoFSDlg::OnTvnItemexpandingTreeSyno(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 		
 	}
-	else
-	{
-		*pResult = 0; return;
-	}
+	//else
+	//{
+	//	*pResult = 0; theApp.DoWaitCursor(-1); return;
+	//}
 
+	theApp.DoWaitCursor(-1); 
 	*pResult = 0;
+
 }
 
 void CDSSynoFSDlg::OnBnClickedButtonCreateFolderOnSyno()
@@ -297,6 +307,8 @@ void CDSSynoFSDlg::OnBnClickedButtonCreateFolderOnSyno()
 	{
 		return;
 	}
+
+	theApp.DoWaitCursor(1);
 
 	CDSHelperApp* DSHelperApp = (CDSHelperApp *)AfxGetApp();
 
@@ -360,6 +372,8 @@ void CDSSynoFSDlg::OnBnClickedButtonCreateFolderOnSyno()
 			}
 		}
 	}
+
+	theApp.DoWaitCursor(-1);
 }
 
 void CDSSynoFSDlg::OnBnClickedButtonAddCurrentToPredef()

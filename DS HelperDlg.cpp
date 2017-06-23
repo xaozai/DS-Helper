@@ -752,7 +752,8 @@ void CDSHelperDlg::OnCbnCloseupComboProtocol()
 
 void CDSHelperDlg::OnBnClickedButtonAddTask()
 {
-	
+	theApp.DoWaitCursor(1);
+
 	CString Task;
 	m_CEditTask.GetWindowText(Task);
 	if (Task.IsEmpty())
@@ -772,7 +773,10 @@ void CDSHelperDlg::OnBnClickedButtonAddTask()
 	m_CEditPassword.Disable_WM_GetText();
 
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	// --- create task
 	CString Destination;
@@ -851,6 +855,7 @@ void CDSHelperDlg::OnBnClickedButtonAddTask()
 	else
 		MessageBox(L"The task was created successfully.", L"Success", MB_ICONINFORMATION);
 	
+	theApp.DoWaitCursor(-1);
 	return;
 }
 
@@ -949,6 +954,8 @@ void CDSHelperDlg::OnDestroy()
 
 	RefreshTaskThreadRunning = false;
 
+	theApp.DoWaitCursor(1);
+
 	if (RefreshThread)
 	{
 		::WaitForSingleObject(RefreshThread->m_hThread, INFINITE);//wait for thread ends
@@ -956,6 +963,8 @@ void CDSHelperDlg::OnDestroy()
 		delete RefreshThread; RefreshThread = NULL;
 	}
 	
+	theApp.DoWaitCursor(-1);
+
 	if (m_ThreadSynoConnect)
 	{
 		delete m_ThreadSynoConnect; m_ThreadSynoConnect = NULL;
@@ -1367,9 +1376,14 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 
 void CDSHelperDlg::DeleteTask()
 {
+	theApp.DoWaitCursor(1);
+
 	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
 	if (SelectedIndex == -1)
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	// --- Auth
 	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
@@ -1380,7 +1394,10 @@ void CDSHelperDlg::DeleteTask()
 	m_CEditPassword.Disable_WM_GetText();
 
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	Json::Value root;//will contains the root value after parsing.
 
@@ -1437,13 +1454,20 @@ void CDSHelperDlg::DeleteTask()
 			}
 		}
 	}
+
+	theApp.DoWaitCursor(-1);
 }
 
 void CDSHelperDlg::PauseTask()
 {
+	theApp.DoWaitCursor(1); 
+	
 	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
 	if (SelectedIndex == -1)
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	// --- Auth
 	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
@@ -1454,7 +1478,10 @@ void CDSHelperDlg::PauseTask()
 	m_CEditPassword.Disable_WM_GetText();
 
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 
 	Json::Value root;//will contains the root value after parsing.
 
@@ -1518,13 +1545,20 @@ void CDSHelperDlg::PauseTask()
 			}
 		}
 	}
+
+	theApp.DoWaitCursor(-1);
 }
 
 void CDSHelperDlg::ResumeTask()
 {
+	theApp.DoWaitCursor(1); 
+	
 	int SelectedIndex = m_CListActiveTasks.GetSelectionMark();
 	if (SelectedIndex == -1)
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 	
 	// --- Auth
 	m_CEditUsername.GetWindowText(m_App->m_AppUsername);
@@ -1535,7 +1569,10 @@ void CDSHelperDlg::ResumeTask()
 	m_CEditPassword.Disable_WM_GetText();
 
 	if (!(m_App->AuthOnSyno(&(CString(L"DownloadStation")))))
+	{
+		theApp.DoWaitCursor(-1); 
 		return;
+	}
 	
 	Json::Value root;//will contains the root value after parsing.
 
@@ -1599,4 +1636,6 @@ void CDSHelperDlg::ResumeTask()
 			}
 		}
 	}
+
+	theApp.DoWaitCursor(-1);
 }
