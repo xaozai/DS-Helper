@@ -9,6 +9,7 @@ Advantages in comparison with extensions for browsers:
 The video shows the work with DS Helper: https://youtu.be/oYu1oPmg7lM
 
 Supported operating systems:  Microsoft Windows XP and later versions.
+DSM 6.0 or higher is required on the DiskStation.
 
 The project uses the JsonCpp library:
 https://github.com/open-source-parsers/jsoncpp
