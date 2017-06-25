@@ -427,6 +427,10 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	BODYpre += "Content-Disposition: form-data; name=\"method\"\r\n\r\n";
 	BODYpre += "create\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
+	BODYpre += "Content-Disposition: form-data; name=\"sid\"\r\n\r\n";
+	BODYpre += SID->GetString();
+	BODYpre += "\r\n";
+	BODYpre += "--" + BoundaryA + "\r\n";
 	BODYpre += "Content-Disposition: form-data; name=\"destination\"\r\n\r\n";
 	BODYpre += CStringA(CT2A(Destination->GetString(), CP_UTF8)) + "\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
