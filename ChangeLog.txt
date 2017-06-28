@@ -1,5 +1,5 @@
 1.21
-	Some Non-critical bugs have been fixed.
+	Some non-critical bugs have been fixed.
 
 1.2
 	Improved the tasklist. Added the ability to manage tasks via the context menu of the tasklist.
