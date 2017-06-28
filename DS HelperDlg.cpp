@@ -1252,8 +1252,17 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 						}
 						else
 						{
+							if (root[index].isMember("title"))
+							{
+								title = root[index]["title"].asCString();
+								item.mask = LVIF_IMAGE | LVIF_TEXT;
+								item.pszText = (LPWSTR)title.GetString();
+							}
+							else
+							{
+								item.mask = LVIF_IMAGE;
+							}
 							item.iItem = ListItemIndex;
-							item.mask = LVIF_IMAGE;
 							item.iSubItem = 1;
 							item.iImage = ImageIndex;
 							m_CListActiveTasks.SetItem(&item);
