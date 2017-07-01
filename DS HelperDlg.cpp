@@ -189,6 +189,7 @@ BOOL CDSHelperDlg::OnInitDialog()
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_COMPLETED));
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_FILE));
 	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_TIME));
+	m_CListImages.Add(m_App->LoadIcon(IDI_ICON_ATTENTION));
 	m_CListActiveTasks.SetImageList(&m_CListImages, LVSIL_SMALL);
 
 	m_CListActiveTasks.InsertColumn(0, _T("id"), LVCFMT_LEFT, 0, 0); 
@@ -1188,10 +1189,20 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 							ImageIndex = 4;
 						}
 						else
-						if (strStatus == L"waiting")
 						{
-							NeedInList = true;
-							ImageIndex = 5;
+							if (strStatus == L"waiting")
+							{
+								NeedInList = true;
+								ImageIndex = 5;
+							}
+							else
+							{
+								if (strStatus == L"error")
+								{
+									NeedInList = true;
+									ImageIndex = 6;
+								}
+							}
 						}
 					}
 				}
@@ -1284,29 +1295,40 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 				}
 				else
 				{
-					if (FullSize)
+					if (ImageIndex == 6)
 					{
-						SizeDownloaded = 0;
-
-						if (root[index].isMember("additional"))
+						if (root[index].isMember("status_extra"))
 						{
-							if (root[index]["additional"].isMember("transfer"))
+							if (root[index]["status_extra"].isMember("error_detail"))
 							{
-								SizeDownloaded = (double)(root[index]["additional"]["transfer"]["size_downloaded"].asDouble());
-
-								if (SizeDownloaded == FullSize)
-								{
-									item.iItem = ListItemIndex;
-									item.mask = LVIF_IMAGE;
-									item.iSubItem = 1;
-									item.iImage = 3;
-									m_CListActiveTasks.SetItem(&item);
-								}
+								percent = root[index]["status_extra"]["error_detail"].asCString();
 							}
 						}
+					}
+					else
+					{
+						if (FullSize)
+						{
+							SizeDownloaded = 0;
 
-						percent.Format(L"%.2f", (100.0 * (SizeDownloaded / FullSize)));
-						
+							if (root[index].isMember("additional"))
+							{
+								if (root[index]["additional"].isMember("transfer"))
+								{
+									SizeDownloaded = (double)(root[index]["additional"]["transfer"]["size_downloaded"].asDouble());
+
+									if (SizeDownloaded == FullSize)
+									{
+										item.iItem = ListItemIndex;
+										item.mask = LVIF_IMAGE;
+										item.iSubItem = 1;
+										item.iImage = 3;
+										m_CListActiveTasks.SetItem(&item);
+									}
+								}
+							}
+							percent.Format(L"%.2f", (100.0 * (SizeDownloaded / FullSize)));
+						}
 					}
 				}
 

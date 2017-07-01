@@ -250,6 +250,7 @@
     <None Include="res\DS Helper.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="res\attention.ico" />
     <Image Include="res\completed.ico" />
     <Image Include="res\delete.bmp" />
     <Image Include="res\delete.ico" />

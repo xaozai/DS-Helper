@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "DownloadStation Helper"
-#define MyAppVersion "1.21"
+#define MyAppVersion "1.22"
 #define MyAppPublisher "xaozai"
 #define MyAppURL "https://github.com/xaozai/DS-Helper"
 #define MyAppExeName "DS Helper.exe"
@@ -22,7 +22,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-OutputDir="..\_inno"
+OutputDir="..\_setup"
 OutputBaseFilename=DS Helper Setup
 Compression=lzma
 SolidCompression=yes

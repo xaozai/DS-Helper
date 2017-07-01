@@ -1,3 +1,6 @@
+1.22
+	Added an error status short description in the task list.
+	
 1.21
 	Some non-critical bugs have been fixed.
 

@@ -154,12 +154,18 @@ void CDSHListCtrl::OnNMRClick(NMHDR *pNMHDR, LRESULT *pResult)
 						}
 						else
 						{
-							m_Menu.EnableMenuItem(ID_MENU_RESUME, MF_BYCOMMAND | MF_GRAYED);
-							m_Menu.EnableMenuItem(ID_MENU_PAUSE, MF_BYCOMMAND | MF_GRAYED);
-							m_Menu.EnableMenuItem(ID_MENU_DELETE, MF_BYCOMMAND | MF_GRAYED);
+							if (item.iImage == 6)
+							{
+								m_Menu.EnableMenuItem(ID_MENU_PAUSE, MF_BYCOMMAND | MF_GRAYED);
+							}
+							else
+							{
+								m_Menu.EnableMenuItem(ID_MENU_RESUME, MF_BYCOMMAND | MF_GRAYED);
+								m_Menu.EnableMenuItem(ID_MENU_PAUSE, MF_BYCOMMAND | MF_GRAYED);
+								m_Menu.EnableMenuItem(ID_MENU_DELETE, MF_BYCOMMAND | MF_GRAYED);
+							}
 						}
 					}
-
 				}
 			}
 		}
