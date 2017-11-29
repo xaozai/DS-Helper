@@ -18,13 +18,13 @@ https://github.com/open-source-parsers/jsoncpp
 -----
 
 ###### How to configure file- and magnet-links associations in Linux Mint 18 XFCE:
-1. ol Add these strings to the section [Default Applications] of the file ~/.local/share/applications/mimeapps.list
-```
+1. Add these strings to the section [Default Applications] of the file ~/.local/share/applications/mimeapps.list
+
 application/x-bittorrent=DownloadStationHelper.desktop
 x-scheme-handler/magnet=DownloadStationHelper.desktop
-```
-2. ol In the directory ~/.local/share/applications create a file named "DownloadStationHelper.desktop" with the following content:
-```
+
+2. In the directory ~/.local/share/applications create a file named "DownloadStationHelper.desktop" with the following content:
+
 [Desktop Entry]
 Name=DownloadStation Helper
 Encoding=UTF-8
@@ -37,5 +37,5 @@ Categories=Network;P2P;
 #or
 Icon=/home/USER_NAME/.local/share/icons/hicolor/256x256/apps/E815_DS Helper.0.png
 Path=/home/USER_NAME/.wine/dosdevices/c:/Program Files (x86)/DownloadStation Helper
-```
+
 (the name of the icon (E815...) may be different - check in the specified directory; USER_NAME - your username)
