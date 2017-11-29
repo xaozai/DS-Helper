@@ -1,4 +1,4 @@
-##### DownloadStation Helper
+#### DownloadStation Helper
 
 The application is designed to simplify the process of adding download tasks to DownloadStation on your Synology DiskStation.
 DSM 6.0 or higher is required on the DiskStation.
@@ -17,13 +17,13 @@ https://github.com/open-source-parsers/jsoncpp
 
 -----
 
-###### How to configure file- and magnet-links associations in Linux Mint 18 XFCE:
-1. ol Add these strings to the section [Default Applications] of the file ~/.local/share/applications/mimeapps.list
+##### How to configure file- and magnet-links associations in Linux Mint 18 XFCE:
+1. Add these strings to the section [Default Applications] of the file ~/.local/share/applications/mimeapps.list
 ```
 application/x-bittorrent=DownloadStationHelper.desktop
 x-scheme-handler/magnet=DownloadStationHelper.desktop
 ```
-2. ol In the directory ~/.local/share/applications create a file named "DownloadStationHelper.desktop" with the following content:
+2. In the directory ~/.local/share/applications create a file named "DownloadStationHelper.desktop" with the following content:
 ```
 [Desktop Entry]
 Name=DownloadStation Helper
