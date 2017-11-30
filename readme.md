@@ -29,13 +29,15 @@ x-scheme-handler/magnet=DownloadStationHelper.desktop
 Name=DownloadStation Helper
 Encoding=UTF-8
 Comment=PlayOnLinux
-Exec=/usr/share/playonlinux/playonlinux --run "DS Helper" %u
+#Exec=/usr/share/playonlinux/playonlinux --run "DS Helper" %u
+#or
+Exec=env WINEPREFIX="/home/USER_NAME/.PlayOnLinux/wineprefix/InternetExplorer8" /home/USER_NAME/.PlayOnLinux/wine/linux-x86/1.7.22/bin/wine start /Unix /home/USER_NAME/.PlayOnLinux/wineprefix/InternetExplorer8/dosdevices/c:/Program\\ Files/DownloadStation\\ Helper/DS\\ Helper.exe %u
 Terminal=false
 Type=Application
 Categories=Network;P2P;
 #Icon="/home/USER_NAME/.PlayOnLinux/icones/full_size/DS Helper"
 #or
 Icon=/home/USER_NAME/.local/share/icons/hicolor/256x256/apps/E815_DS Helper.0.png
-Path=/home/USER_NAME/.wine/dosdevices/c:/Program Files (x86)/DownloadStation Helper
+Path=/home/USER_NAME/.PlayOnLinux/wineprefix/InternetExplorer8/drive_c/Program Files/DownloadStation Helper
 ```
-(the name of the icon (E815...) may be different - check in the specified directory; USER_NAME - your username)
+(the name of the icon (E815...) may be different - check in the specified directory; USER_NAME - your username; InternetExplorer8 - prefix (a virtual disk, with IE8 and DS Helper))
