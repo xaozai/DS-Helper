@@ -29,7 +29,7 @@ x-scheme-handler/magnet=DownloadStationHelper.desktop
 Name=DownloadStation Helper
 Encoding=UTF-8
 Comment=PlayOnLinux
-Exec=env WINEPREFIX="/home/USER_NAME/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix "/home/USER_NAME/.wine/dosdevices/c:/Program Files (x86)/DownloadStation Helper/DS Helper.exe" %u
+Exec=/usr/share/playonlinux/playonlinux --run "DS Helper" %u
 Terminal=false
 Type=Application
 Categories=Network;P2P;
