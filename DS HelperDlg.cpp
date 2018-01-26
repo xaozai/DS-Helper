@@ -88,6 +88,9 @@ void CDSHelperDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_PORT, m_CEditPort);
 	DDX_Control(pDX, IDC_LIST_ACTIVE_TASKS, m_CListActiveTasks);
 	DDX_Control(pDX, IDC_CHECK_SHOW_ACTIVE_TASKS, m_CheckBoxShowActiveTasks);
+	DDX_Control(pDX, IDC_CHECK_USE_PROXY, m_CheckUseProxy);
+	DDX_Control(pDX, IDC_EDIT_PROXY_ADDRESS, m_EditProxyAddress);
+	DDX_Control(pDX, IDC_EDIT_PROXY_PORT, m_EditProxyPort);
 }
 
 BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
@@ -110,6 +113,10 @@ BEGIN_MESSAGE_MAP(CDSHelperDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_CLOSE()
 	//ON_NOTIFY(NM_RCLICK, IDC_LIST_ACTIVE_TASKS, &CDSHelperDlg::OnNMRClickListActiveTasks)
+	ON_BN_CLICKED(IDC_CHECK_USE_PROXY, &CDSHelperDlg::OnBnClickedCheckUseProxy)
+	ON_EN_KILLFOCUS(IDC_EDIT_PROXY_PORT, &CDSHelperDlg::OnEnKillfocusEditProxyPort)
+	ON_EN_KILLFOCUS(IDC_EDIT_PROXY_ADDRESS, &CDSHelperDlg::OnEnKillfocusEditProxyAddress)
+	
 END_MESSAGE_MAP()
 
 void CDSHelperDlg::HideCList()
@@ -145,6 +152,20 @@ BOOL CDSHelperDlg::OnInitDialog()
 		m_ToolTip.AddTool(&m_ButtonAddATask, _T("Add the task"));
 		m_ToolTip.AddTool(&m_StorePassword, _T("Store the password"));
 		m_ToolTip.AddTool(&m_ButtonOpenFile, _T("Open a file"));
+
+		m_ToolTip.AddTool(&m_ComboProtocol, _T("A protocol to connect the Diskstation"));
+		m_ToolTip.AddTool(&m_CEditAddress, _T("An address of the Diskstation"));
+		m_ToolTip.AddTool(&m_CEditPort, _T("A TCP port of the Diskstation"));
+		m_ToolTip.AddTool(&m_CheckUseProxy, _T("Use a proxy server to connect the Diskstation"));
+
+		m_ToolTip.AddTool(&m_EditProxyAddress, _T("An address of the proxy server"));
+		m_ToolTip.AddTool(&m_EditProxyPort, _T("A TCP port of the proxy server"));
+
+		m_ToolTip.AddTool(&m_CEditUsername, _T("A usesrname to sign in DSM on the Diskstation"));
+		m_ToolTip.AddTool(&m_CEditPassword, _T("A password to sign in DSM on the Diskstation"));
+
+		m_ToolTip.AddTool(&m_ComboPath, _T("A destination path on the Diskstation to save files"));
+		m_ToolTip.AddTool(&m_CEditTask, _T("A task - a path to a torrent file, a magnet-link or the other path / address"));
 
 		m_ToolTip.Activate(TRUE);
 	}
@@ -468,6 +489,23 @@ void CDSHelperDlg::ReadSettings()
 			}
 		}
 
+		hRes = ::RegQueryValueEx(hKey, L"ProxyAddress", NULL, &dwKeyDataType, (LPBYTE)&szData, &dwDataBufSize);
+		if (hRes == ERROR_SUCCESS)
+		{
+			switch (dwKeyDataType)
+			{
+			case REG_SZ:
+
+				m_EditProxyAddress.SetWindowText(szData);
+
+				dwDataBufSize = 256;
+				dwKeyDataType = 0;
+				ZeroMemory(szData, 1);
+
+				break;
+			}
+		}
+
 		hRes = ::RegQueryValueEx(hKey, L"Port", NULL, &dwKeyDataType, (LPBYTE)&szData, &dwDataBufSize);
 		if (hRes == ERROR_SUCCESS)
 		{
@@ -477,6 +515,52 @@ void CDSHelperDlg::ReadSettings()
 
 				m_CEditPort.SetWindowText(szData);
 
+				dwDataBufSize = 256;
+				dwKeyDataType = 0;
+				ZeroMemory(szData, 1);
+
+				break;
+			}
+		}
+
+		hRes = ::RegQueryValueEx(hKey, L"ProxyPort", NULL, &dwKeyDataType, (LPBYTE)&szData, &dwDataBufSize);
+		if (hRes == ERROR_SUCCESS)
+		{
+			switch (dwKeyDataType)
+			{
+			case REG_SZ:
+
+				m_EditProxyPort.SetWindowText(szData);
+
+				dwDataBufSize = 256;
+				dwKeyDataType = 0;
+				ZeroMemory(szData, 1);
+
+				break;
+			}
+		}
+		
+		hRes = ::RegQueryValueEx(hKey, L"UseProxy", NULL, &dwKeyDataType, (LPBYTE)&szData, &dwDataBufSize);
+		if (hRes == ERROR_SUCCESS)
+		{
+			switch (dwKeyDataType)
+			{
+			case REG_DWORD:
+				if (szData[0] == 1)
+				{
+					m_CheckUseProxy.SetCheck(BST_CHECKED);
+					theApp.m_AppUseProxy = TRUE;
+					m_EditProxyAddress.EnableWindow(true);
+					m_EditProxyPort.EnableWindow(true);
+					ChangeAppProxy(TRUE);
+				}
+				else
+				{
+					m_EditProxyAddress.EnableWindow(false);
+					m_EditProxyPort.EnableWindow(false);
+					theApp.m_AppUseProxy = FALSE;
+					ChangeAppProxy(FALSE);
+				}
 				dwDataBufSize = 256;
 				dwKeyDataType = 0;
 				ZeroMemory(szData, 1);
@@ -1046,7 +1130,7 @@ int CDSHelperDlg::RefreshActiveTasks(bool NeedAuth)
 
 	URL = (m_App->m_AppEnumProto == HTTPS ? L"https://" : L"http://") + m_App->m_AppAddress + L":" + m_App->m_AppPort + L"/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=1&method=list&additional=transfer&sid=" + m_App->m_AppSID;
 	Response = m_ThreadSynoConnect->GetURL(m_App->m_AppEnumProto, &URL, true);
-
+	
 	if (Response.code != 200)
 	{
 		if (!Response.strResponse.IsEmpty())
@@ -1669,4 +1753,89 @@ void CDSHelperDlg::ResumeTask()
 	}
 
 	theApp.DoWaitCursor(-1);
+}
+
+void CDSHelperDlg::OnBnClickedCheckUseProxy()
+{
+
+	HKEY hKey = m_Registry.GetMainHKey();
+	DWORD val(0);
+	LONG hRes(0);
+	
+	if (m_CheckUseProxy.GetCheck())
+	{
+		m_EditProxyAddress.EnableWindow(true);
+		m_EditProxyPort.EnableWindow(true);
+		theApp.m_AppUseProxy = TRUE;
+		ChangeAppProxy(TRUE);
+		val = 1;
+	}
+	else
+	{
+		m_EditProxyAddress.EnableWindow(false);
+		m_EditProxyPort.EnableWindow(false);
+		theApp.m_AppUseProxy = FALSE;
+		ChangeAppProxy(FALSE);
+		val = 0;
+	}
+
+	hRes = ::RegSetValueEx(hKey, L"UseProxy", NULL, REG_DWORD, (const BYTE*)&val, sizeof(val));
+	if (hRes != ERROR_SUCCESS)
+	{
+		_com_error error(hRes);
+		MessageBox(error.ErrorMessage(), L"Create the registry key error!", MB_ICONEXCLAMATION);
+	}
+
+	MessageBox(L"Perhaps the app will need to restart to apply the proxy settings.", AfxGetApp()->m_pszAppName, MB_ICONINFORMATION);
+}
+
+void CDSHelperDlg::OnEnKillfocusEditProxyPort()
+{
+	
+		ChangeAppProxy(TRUE);
+
+		if (!m_DoSaveSettings)
+			return;
+		LONG hRes = m_Registry.WriteSZ(&m_EditProxyPort, m_Registry.GetMainHKey(), L"ProxyPort");
+		if (hRes != ERROR_SUCCESS)
+		{
+			_com_error error(hRes);
+			MessageBox(error.ErrorMessage(), L"Write the registry key error!", MB_ICONEXCLAMATION);
+		}
+	
+}
+
+void CDSHelperDlg::ChangeAppProxy(BOOL UseProxy)
+{
+	delete m_App->m_pAppSynoConnect;
+	m_App->m_pAppSynoConnect = new WebClient;
+	
+	if (UseProxy)
+	{
+		m_EditProxyPort.GetWindowText(m_App->m_AppProxyPort);
+		m_EditProxyAddress.GetWindowText(m_App->m_AppProxyAddress);
+
+		m_App->m_pAppSynoConnect->SetUseProxy(TRUE, &(m_App->m_AppProxyAddress), &(m_App->m_AppProxyPort));
+	}
+	else
+	{
+		m_App->m_pAppSynoConnect->SetUseProxy(FALSE);
+	}
+	
+}
+
+void CDSHelperDlg::OnEnKillfocusEditProxyAddress()
+{
+	
+	ChangeAppProxy(TRUE);
+
+	if (!m_DoSaveSettings)
+		return;
+
+	LONG hRes = m_Registry.WriteSZ(&m_EditProxyAddress, m_Registry.GetMainHKey(), L"ProxyAddress");
+	if (hRes != ERROR_SUCCESS)
+	{
+		_com_error error(hRes);
+		MessageBox(error.ErrorMessage(), L"Write the registry key error!", MB_ICONEXCLAMATION);
+	}
 }

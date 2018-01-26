@@ -134,11 +134,16 @@ void WebClient::InitCodesDescr()
 WebClient::WebClient()
 {
 	InitCodesDescr();
+
+	m_pSession = new CInternetSession;
 }
 
 WebClient::~WebClient()
 {
-	m_session.Close();
+	m_pSession->Close();
+	InternetCloseHandle((HINTERNET)m_pSession);
+	delete m_pSession;
+	m_pSession = NULL;
 }
 
 CString WebClient::GetCodeDescription(DWORD code)
@@ -242,9 +247,9 @@ HTTPResponse WebClient::GetURL(Protocol Prot, CString* URL, bool Convert)
 	
 	DWORD flags(0);
 	if(Prot == HTTPS)
-		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE;
+		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_SECURE | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 	else
-		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE;
+		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 
 	CHttpFile* HTTPfile = NULL;
 
@@ -253,7 +258,7 @@ HTTPResponse WebClient::GetURL(Protocol Prot, CString* URL, bool Convert)
 Again:
 	try
 	{
-		HTTPfile = (CHttpFile *)m_session.OpenURL(URL->GetString(), 1, flags);
+		HTTPfile = (CHttpFile *)m_pSession->OpenURL(URL->GetString(), 1, flags);
 	}
 	catch (CInternetException *e)
 	{
@@ -306,11 +311,11 @@ HTTPResponse WebClient::GetURL(Protocol Prot, CString* Address, CString* Port, C
 	
 	DWORD flags(0);
 	if (Prot == HTTPS)
-		flags = INTERNET_FLAG_SECURE;
+		flags = INTERNET_FLAG_SECURE | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 	else
-		flags = INTERNET_FLAG_TRANSFER_ASCII;
+		flags = INTERNET_FLAG_TRANSFER_ASCII | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 
-	CHttpConnection* connection = m_session.GetHttpConnection(Address->GetString(), (INTERNET_PORT)_wtoi(Port->GetString()));
+	CHttpConnection* connection = m_pSession->GetHttpConnection(Address->GetString(), (INTERNET_PORT)_wtoi(Port->GetString()));
 	CHttpFile* HTTPfile = connection->OpenRequest(CHttpConnection::HTTP_VERB_GET, Target->GetString(), NULL, 1, 0, 0, flags);
 
 	bool SecondTry = false;
@@ -360,6 +365,8 @@ Again:
 	RetVal = ReadResponse(HTTPfile);
 	
 	HTTPfile->Close(); delete HTTPfile; HTTPfile = NULL;
+	connection->Close();
+	delete connection;
 
 	return RetVal;
 }
@@ -379,6 +386,41 @@ void WebClient::MakeBoundary(CString* Str)
 	Str->Append(tmp);
 }
 
+void WebClient::SetUseProxy(BOOL UseProxy, CString* ProxyAddr, CString* ProxyPort)
+{
+	INTERNET_PROXY_INFO pi;
+
+	if (UseProxy)
+	{
+		CString FullProxyAddr("socks=");
+		FullProxyAddr.Append(ProxyAddr->GetString());
+		FullProxyAddr.Append(L":");
+		FullProxyAddr.Append(ProxyPort->GetString());
+
+		pi.dwAccessType = INTERNET_OPEN_TYPE_PROXY;
+		
+		const size_t nSize = (FullProxyAddr.GetLength() + 1) * 2;
+		char *strConverted = new char[nSize];
+		size_t convertedCharsw = 0;
+		wcstombs_s(&convertedCharsw, strConverted, nSize, FullProxyAddr, _TRUNCATE);
+
+		pi.lpszProxy = (LPCTSTR)strConverted;
+		pi.lpszProxyBypass = (LPCTSTR)strConverted;
+
+		m_pSession->SetOption(INTERNET_OPTION_PROXY, &pi, sizeof(pi));
+
+		delete []strConverted;
+	}
+	else
+	{
+		pi.dwAccessType = INTERNET_OPEN_TYPE_DIRECT;//INTERNET_OPEN_TYPE_PRECONFIG;//IE setting by default
+		pi.lpszProxy = NULL;
+		pi.lpszProxyBypass = NULL;
+		m_pSession->SetOption(INTERNET_OPTION_PROXY, &pi, sizeof(pi));
+	}
+
+}
+
 HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Address, CString* Port, CString* Destination, CString* SID)
 {
 	HTTPResponse RetVal;
@@ -390,9 +432,9 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	DWORD flags(0);
 
 	if (Prot == HTTPS)
-		flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_SECURE;
+		flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_SECURE | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 	else
-		flags = INTERNET_FLAG_KEEP_CONNECTION;
+		flags = INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_RELOAD | INTERNET_IDENTITY_FLAG_CLEAR_CONTENT | INTERNET_IDENTITY_FLAG_CLEAR_DATA | INTERNET_IDENTITY_FLAG_CLEAR_COOKIES;
 
 	CFile file;
 	if (!file.Open(PathToFile->GetString(), CFile::modeRead | CFile::typeBinary))
@@ -402,7 +444,7 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 		return RetVal;
 	}
 
-	CHttpConnection* connection = m_session.GetHttpConnection(Address->GetString(), (INTERNET_PORT)_wtoi(Port->GetString()));
+	CHttpConnection* connection = m_pSession->GetHttpConnection(Address->GetString(), (INTERNET_PORT)_wtoi(Port->GetString()));
 
 	CHttpFile* HTTPfile = connection->OpenRequest(CHttpConnection::HTTP_VERB_POST, L"/webapi/DownloadStation/task.cgi", NULL, 1, 0, 0, flags);
 
@@ -502,7 +544,10 @@ Again:
 
 	RetVal = ReadResponse(HTTPfile);
 
+	
 	HTTPfile->Close(); delete HTTPfile; HTTPfile = NULL;
+	connection->Close();
+	delete connection;
 
 	return RetVal;
 }

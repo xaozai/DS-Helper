@@ -71,6 +71,10 @@ private:
 	CButton m_ButtonOpenFile;
 	CEdit m_CEditTask;
 
+	CButton m_CheckUseProxy;
+	CEdit m_EditProxyAddress;
+	CEdit m_EditProxyPort;
+
 	CDSHListCtrl m_CListActiveTasks;//CListCtrl
 
 	HICON m_hIcon;
@@ -91,6 +95,10 @@ private:
 	afx_msg void OnBnClickedCheckShowActiveTasks();
 	afx_msg void OnDestroy();
 	afx_msg void OnClose();
+
+	afx_msg void OnBnClickedCheckUseProxy();
+	afx_msg void OnEnKillfocusEditProxyPort();
+	afx_msg void OnEnKillfocusEditProxyAddress();
 	//afx_msg LRESULT OnMenuClick(WPARAM, LPARAM);
 	
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
@@ -121,13 +129,11 @@ private:
 	CButton m_CheckBoxShowActiveTasks;
 	CImageList m_CListImages;
 
+	void ChangeAppProxy(BOOL);
 	void HideCList();
 	void ShowCList();
 	CRect CListRect;
 	CRect WinRect;
-	
-//public:
-	//afx_msg void OnNMRClickListActiveTasks(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 #endif

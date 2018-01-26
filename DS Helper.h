@@ -59,6 +59,10 @@ public:
 	CString m_AppUsername;
 	CString m_AppPassword;
 	CString m_AppSID;
+
+	BOOL m_AppUseProxy;
+	CString m_AppProxyPort;
+	CString m_AppProxyAddress;
 	
 	Protocol m_AppEnumProto;
 

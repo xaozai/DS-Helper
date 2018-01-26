@@ -51,8 +51,12 @@ public:
 	CString GetSynoDSCodeDescription(DWORD);
 	CString GetSynoFSCodeDescription(DWORD);
 
+	void SetUseProxy(BOOL, CString* = NULL, CString* = NULL);
+
 private:
-	CInternetSession m_session;
+	//CInternetSession m_session;
+	CInternetSession* m_pSession;
+	
 	CString m_Response;
 	
 	std::map<DWORD, TCHAR*> m_CodesDescriptions, m_SynoDSCodesDescriptions, m_SynoFSCodesDescriptions;
