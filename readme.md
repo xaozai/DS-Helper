@@ -42,5 +42,4 @@ Path=/home/USER_NAME/.PlayOnLinux/wineprefix/InternetExplorer8/drive_c/Program F
 ```
 (the name of the icon (E815...) may be different - check in the specified directory; USER_NAME - your username; InternetExplorer8 - prefix (a virtual disk, with IE8 and DS Helper))
 
-##### Also, on linux it is convenient to use this bash script to manage Download Station tasks from the command line:
-https://github.com/xaozai/ds-cli
+##### Also, on linux it is convenient to use this bash script to manage Download Station tasks from the command line: https://github.com/xaozai/ds-cli
