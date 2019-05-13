@@ -426,7 +426,7 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	HTTPResponse RetVal;
 
 	DWORD dwStatus(0);
-	
+
 	m_Response = "";
 
 	DWORD flags(0);
@@ -456,7 +456,7 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	MakeBoundary(&Boundary);
 
 	HTTPfile->AddRequestHeaders(L"Content-Type: multipart/form-data; boundary=" + Boundary + "\r\n", HTTP_ADDREQ_FLAG_ADD_IF_NEW | HTTP_ADDREQ_FLAG_REPLACE);//HTTP_ADDREQ_FLAG_ADD
-	
+
 	CStringA BoundaryA = CW2A(Boundary, CP_ACP);
 
 	CStringA BODYpre = "--" + BoundaryA + "\r\n";
@@ -464,7 +464,7 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	BODYpre += "SYNO.DownloadStation.Task\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
 	BODYpre += "Content-Disposition: form-data; name=\"version\"\r\n\r\n";
-	BODYpre += "1\r\n"; 
+	BODYpre += "1\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
 	BODYpre += "Content-Disposition: form-data; name=\"method\"\r\n\r\n";
 	BODYpre += "create\r\n";
@@ -476,15 +476,15 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 	BODYpre += "Content-Disposition: form-data; name=\"destination\"\r\n\r\n";
 	BODYpre += CStringA(CT2A(Destination->GetString(), CP_UTF8)) + "\r\n";
 	BODYpre += "--" + BoundaryA + "\r\n";
-	BODYpre += "Content-Disposition: form-data; name=\"file\"; filename=\"" + CStringA(file.GetFileName()) + "\"\r\n";
+	BODYpre += "Content-Disposition: form-data; name=\"file\"; filename=\"" + CStringA(CT2A(file.GetFileName(), CP_UTF8)) + "\"\r\n";
 	BODYpre += "Content-Type: application/octet-stream\r\n\r\n";
-	
+
 	CStringA BODYpost = "\r\n" + BoundaryA + "--\r\n\r\n";//the last "\r\n" just for correct the length
-	
+
 	HTTPfile->SendRequestEx(DWORD(BODYpre.GetLength() + file.GetLength() + BODYpost.GetLength()), HSR_SYNC | HSR_INITIATE);
 
 	HTTPfile->Write(BODYpre, BODYpre.GetLength());
-	
+
 	char szBuff[2048];
 	UINT nRead = file.Read(&szBuff, 2048);
 	while (nRead > 0)
@@ -492,12 +492,12 @@ HTTPResponse WebClient::PostFile(Protocol Prot, CString* PathToFile, CString* Ad
 		HTTPfile->Write(&szBuff, nRead);
 		nRead = file.Read(&szBuff, 2048);
 	}
-	file.Close(); 
+	file.Close();
 
 	HTTPfile->Write(BODYpost, BODYpost.GetLength());
 
 	bool SecondTry = false;
-	
+
 Again:
 	try
 	{
@@ -517,7 +517,7 @@ Again:
 					HTTPfile->SetOption(INTERNET_OPTION_SECURITY_FLAGS, dwSecurityFlags);
 					SecondTry = true;
 				}
-				
+
 				goto Again;
 			}
 			else
@@ -544,7 +544,7 @@ Again:
 
 	RetVal = ReadResponse(HTTPfile);
 
-	
+
 	HTTPfile->Close(); delete HTTPfile; HTTPfile = NULL;
 	connection->Close();
 	delete connection;
